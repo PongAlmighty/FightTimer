@@ -1,5 +1,6 @@
 import logging
-from flask import Flask, render_template
+import os
+from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO, emit
 
 # Configure logging
@@ -7,10 +8,8 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'a-very-secret-key'
-socketio = SocketIO(app, 
-                   cors_allowed_origins="*",  # Allow all origins in development
-                   async_mode='threading')     # Use threading mode for better compatibility
+app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'development-key')
+socketio = SocketIO(app, cors_allowed_origins="*")  # Allow all origins in development
 
 @app.route('/')
 def index():
@@ -23,6 +22,36 @@ def control():
     """Render the control panel page."""
     logger.debug("Serving control panel")
     return render_template('control.html')
+
+@app.route('/api/timer', methods=['GET', 'POST'])
+def timer_api():
+    """REST API endpoint for Bitfocus Companion integration."""
+    if request.method == 'GET':
+        logger.debug("API status check")
+        return jsonify({
+            "status": "success",
+            "message": "Timer API endpoint is active",
+            "supported_actions": ["start", "stop", "reset"]
+        })
+
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    action = data.get('action')
+    if action not in ['start', 'stop', 'reset']:
+        return jsonify({"error": "Invalid action"}), 400
+
+    # Handle timer control
+    control_data = {
+        'action': action,
+        'minutes': data.get('minutes', 5),
+        'seconds': data.get('seconds', 0)
+    }
+
+    logger.debug(f"API received timer control: {control_data}")
+    socketio.emit('timer_update', control_data)  # Remove broadcast parameter
+    return jsonify({"status": "success"})
 
 @socketio.on('timer_control')
 def handle_timer_control(data):
@@ -40,11 +69,3 @@ def handle_connect():
 def handle_disconnect():
     """Handle client disconnection."""
     logger.debug("Client disconnected")
-
-if __name__ == '__main__':
-    logger.info("Starting server on 0.0.0.0:8765")
-    socketio.run(app, 
-                host='0.0.0.0', 
-                port=8765, 
-                debug=True,
-                allow_unsafe_werkzeug=True)  # Allow debug mode in development
