@@ -51,7 +51,7 @@ def timer_api():
     else:
         control_data = {
             'action': action,
-            'minutes': data.get('minutes', 5),
+            'minutes': data.get('minutes', 3),
             'seconds': data.get('seconds', 0)
         }
         logger.debug(f"API received timer control: {control_data}")
