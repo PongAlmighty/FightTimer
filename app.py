@@ -8,7 +8,8 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'a-very-secret-key'
-socketio = SocketIO(app, cors_allowed_origins="*")
+# Only allow connections from localhost
+socketio = SocketIO(app, cors_allowed_origins=["http://localhost:5000", "http://127.0.0.1:5000"])
 
 @app.route('/')
 def index():
@@ -37,4 +38,5 @@ def handle_disconnect():
     logger.debug("Client disconnected")
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+    # Only allow connections from localhost
+    socketio.run(app, host='127.0.0.1', port=5000, debug=True)
