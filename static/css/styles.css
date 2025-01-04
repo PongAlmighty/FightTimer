@@ -5,16 +5,18 @@
 }
 
 body {
-    background-color: transparent;
+    background-color: #000; /* Dark background for timer display */
     font-family: Arial, sans-serif;
 }
 
+/* Timer display container */
 .timer-container {
     width: 100vw;
     height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
+    background-color: transparent; /* Transparent for OBS */
 }
 
 canvas {
