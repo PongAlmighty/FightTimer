@@ -5,8 +5,9 @@
 }
 
 body {
-    background-color: #000; /* Dark background for timer display */
+    background-color: #000;  /* Black background for better visibility */
     font-family: Arial, sans-serif;
+    color: #ffffff;  /* Ensure default text is white */
 }
 
 /* Timer display container */

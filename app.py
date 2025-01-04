@@ -8,17 +8,18 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'a-very-secret-key'
-# Only allow connections from localhost
-socketio = SocketIO(app, cors_allowed_origins=["http://localhost:5000", "http://127.0.0.1:5000"])
+socketio = SocketIO(app, cors_allowed_origins="*")  # Allow all origins in development
 
 @app.route('/')
 def index():
     """Render the timer display page."""
+    logger.debug("Serving index page")
     return render_template('index.html')
 
 @app.route('/control')
 def control():
     """Render the control panel page."""
+    logger.debug("Serving control panel")
     return render_template('control.html')
 
 @socketio.on('timer_control')
@@ -31,6 +32,7 @@ def handle_timer_control(data):
 def handle_connect():
     """Handle client connection."""
     logger.debug("Client connected")
+    emit('connection_response', {'status': 'connected'})
 
 @socketio.on('disconnect')
 def handle_disconnect():
@@ -38,5 +40,5 @@ def handle_disconnect():
     logger.debug("Client disconnected")
 
 if __name__ == '__main__':
-    # Only allow connections from localhost
-    socketio.run(app, host='127.0.0.1', port=5000, debug=True)
+    logger.info("Starting server on 0.0.0.0:5000")
+    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
