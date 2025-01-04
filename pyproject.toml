@@ -1,7 +1,7 @@
 [project]
-name = "repl-nix-livestreamtimer"
+name = "fight-timer"
 version = "0.1.0"
-description = "Add your description here"
+description = "A professional-grade browser-based countdown timer for live streaming production environments"
 requires-python = ">=3.11"
 dependencies = [
     "email-validator>=2.2.0",

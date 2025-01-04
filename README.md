@@ -1,2 +1,2 @@
-git clone https://github.com/PongAlmighty/LiveStreamTimer.git
-   cd LiveStreamTimer
+git clone https://github.com/PongAlmighty/FightTimer.git
+   cd FightTimer

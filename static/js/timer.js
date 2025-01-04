@@ -10,7 +10,7 @@ class Timer {
             fontFamily: 'Arial',
             fontSize: 100
         };
-        
+
         this.resize();
         window.addEventListener('resize', () => this.resize());
         this.draw();
@@ -63,7 +63,15 @@ class Timer {
 
     draw() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        
+
+        // Draw running indicator
+        if (this.isRunning) {
+            this.ctx.fillStyle = '#4CAF50'; // Green dot when running
+            this.ctx.beginPath();
+            this.ctx.arc(30, 30, 10, 0, Math.PI * 2);
+            this.ctx.fill();
+        }
+
         this.ctx.fillStyle = this.settings.textColor;
         this.ctx.font = `${this.settings.fontSize}px ${this.settings.fontFamily}`;
         this.ctx.textAlign = 'center';
