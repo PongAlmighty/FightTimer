@@ -28,6 +28,7 @@ if (document.querySelector('.control-panel')) {
     const minutesInput = document.getElementById('minutes');
     const secondsInput = document.getElementById('seconds');
     const textColor = document.getElementById('textColor');
+    const backgroundColor = document.getElementById('backgroundColor');
     const fontFamily = document.getElementById('fontFamily');
     const fontSize = document.getElementById('fontSize');
     const endMessage = document.getElementById('endMessage');
@@ -54,6 +55,7 @@ if (document.querySelector('.control-panel')) {
             action: 'settings',
             settings: {
                 textColor: textColor.value,
+                backgroundColor: backgroundColor.value,
                 fontFamily: fontFamily.value,
                 fontSize: parseInt(fontSize.value),
                 endMessage: endMessage.value
@@ -62,6 +64,7 @@ if (document.querySelector('.control-panel')) {
     };
 
     textColor.addEventListener('change', updateSettings);
+    backgroundColor.addEventListener('change', updateSettings);
     fontFamily.addEventListener('change', updateSettings);
     fontSize.addEventListener('input', updateSettings);
     endMessage.addEventListener('input', updateSettings);

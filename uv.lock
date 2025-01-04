@@ -63,6 +63,27 @@ wheels = [
 ]
 
 [[package]]
+name = "fight-timer"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "email-validator" },
+    { name = "flask" },
+    { name = "flask-socketio" },
+    { name = "flask-sqlalchemy" },
+    { name = "psycopg2-binary" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "email-validator", specifier = ">=2.2.0" },
+    { name = "flask", specifier = ">=3.1.0" },
+    { name = "flask-socketio", specifier = ">=5.5.0" },
+    { name = "flask-sqlalchemy", specifier = ">=3.1.1" },
+    { name = "psycopg2-binary", specifier = ">=2.9.10" },
+]
+
+[[package]]
 name = "flask"
 version = "3.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -298,27 +319,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/ce/d0/40ed38076e8aee94785d546d3e3a1cae393da5806a8530be877187e2875f/python_socketio-5.12.1.tar.gz", hash = "sha256:0299ff1f470b676c09c1bfab1dead25405077d227b2c13cf217a34dadc68ba9c", size = 119991 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8a/a3/c69806f30dd81df5a99d592e7db4c930c3a9b098555aa97b0eb866b20b11/python_socketio-5.12.1-py3-none-any.whl", hash = "sha256:24a0ea7cfff0e021eb28c68edbf7914ee4111bdf030b95e4d250c4dc9af7a386", size = 76947 },
-]
-
-[[package]]
-name = "repl-nix-livestreamtimer"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "email-validator" },
-    { name = "flask" },
-    { name = "flask-socketio" },
-    { name = "flask-sqlalchemy" },
-    { name = "psycopg2-binary" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "email-validator", specifier = ">=2.2.0" },
-    { name = "flask", specifier = ">=3.1.0" },
-    { name = "flask-socketio", specifier = ">=5.5.0" },
-    { name = "flask-sqlalchemy", specifier = ">=3.1.1" },
-    { name = "psycopg2-binary", specifier = ">=2.9.10" },
 ]
 
 [[package]]

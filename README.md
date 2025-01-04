@@ -3,7 +3,7 @@ git clone https://github.com/PongAlmighty/FightTimer.git
 cd FightTimer
 
 # Install dependencies
-pip install flask flask-socketio flask-sqlalchemy email-validator
+pip install -r requirements.txt
 
 # Start the server (default port: 8765)
 python main.py

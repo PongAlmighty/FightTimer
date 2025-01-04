@@ -7,6 +7,7 @@ class Timer {
         this.endMessage = 'TIME';
         this.settings = {
             textColor: '#ffffff',
+            backgroundColor: '#000000',
             fontFamily: 'Arial',
             fontSize: 100
         };
@@ -62,7 +63,9 @@ class Timer {
     }
 
     draw() {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        // Fill background
+        this.ctx.fillStyle = this.settings.backgroundColor;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
         // Draw running indicator
         if (this.isRunning) {
