@@ -5,9 +5,9 @@
 }
 
 body {
-    background-color: #000;  /* Black background for better visibility */
+    background-color: #00ff00;  /* green background for chroma */
     font-family: Arial, sans-serif;
-    color: #ffffff;  /* Ensure default text is white */
+    color: #000000;  /* Ensure default text is black */
 }
 
 /* Timer display container */
