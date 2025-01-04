@@ -31,7 +31,7 @@ def timer_api():
         return jsonify({
             "status": "success",
             "message": "Timer API endpoint is active",
-            "supported_actions": ["start", "stop", "reset"]
+            "supported_actions": ["start", "stop", "reset", "settings"]
         })
 
     data = request.get_json()
@@ -39,19 +39,24 @@ def timer_api():
         return jsonify({"error": "No data provided"}), 400
 
     action = data.get('action')
-    if action not in ['start', 'stop', 'reset']:
+    if action not in ['start', 'stop', 'reset', 'settings']:
         return jsonify({"error": "Invalid action"}), 400
 
     # Handle timer control
-    control_data = {
-        'action': action,
-        'minutes': data.get('minutes', 5),
-        'seconds': data.get('seconds', 0)
-    }
-
-    logger.debug(f"API received timer control: {control_data}")
-    socketio.emit('timer_update', control_data)  # Remove broadcast parameter
-    return jsonify({"status": "success"})
+    if action == 'settings':
+        settings = data.get('settings', {})
+        logger.debug(f"API received settings update: {settings}")
+        socketio.emit('timer_update', {'action': 'settings', 'settings': settings})
+        return jsonify({"status": "success"})
+    else:
+        control_data = {
+            'action': action,
+            'minutes': data.get('minutes', 5),
+            'seconds': data.get('seconds', 0)
+        }
+        logger.debug(f"API received timer control: {control_data}")
+        socketio.emit('timer_update', control_data)
+        return jsonify({"status": "success"})
 
 @socketio.on('timer_control')
 def handle_timer_control(data):
