@@ -8,7 +8,9 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'a-very-secret-key'
-socketio = SocketIO(app, cors_allowed_origins="*")  # Allow all origins in development
+socketio = SocketIO(app, 
+                   cors_allowed_origins="*",  # Allow all origins in development
+                   async_mode='threading')     # Use threading mode for better compatibility
 
 @app.route('/')
 def index():
@@ -40,5 +42,9 @@ def handle_disconnect():
     logger.debug("Client disconnected")
 
 if __name__ == '__main__':
-    logger.info("Starting server on 0.0.0.0:5000")
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+    logger.info("Starting server on 0.0.0.0:8765")
+    socketio.run(app, 
+                host='0.0.0.0', 
+                port=8765, 
+                debug=True,
+                allow_unsafe_werkzeug=True)  # Allow debug mode in development
