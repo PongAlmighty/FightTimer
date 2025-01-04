@@ -1,5 +1,1 @@
-{
-    "status": "success",
-    "message": "Timer API endpoint is active",
-    "supported_actions": ["start", "stop", "reset", "settings"]
-}
+curl http://your-server:8765/api/timer
