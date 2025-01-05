@@ -32,21 +32,23 @@ if (document.querySelector('.control-panel')) {
     const fontFamily = document.getElementById('fontFamily');
 
 // Populate font selector with system fonts
-function populateSystemFonts() {
-    const fonts = window.queryLocalFonts ? window.queryLocalFonts() : null;
-    if (fonts) {
-        fonts.then(fontData => {
+async function populateSystemFonts() {
+    try {
+        if ('queryLocalFonts' in window) {
+            const availableFonts = await window.queryLocalFonts();
             fontFamily.innerHTML = ''; // Clear existing options
-            const uniqueFonts = new Set(fontData.map(font => font.family));
+            const uniqueFonts = new Set(availableFonts.map(font => font.family));
             uniqueFonts.forEach(font => {
                 const option = document.createElement('option');
                 option.value = font;
                 option.textContent = font;
                 fontFamily.appendChild(option);
             });
-        }).catch(() => {
-            console.log('Unable to access system fonts');
-        });
+        } else {
+            console.log('Local Font Access API not supported');
+        }
+    } catch (error) {
+        console.error('Error accessing system fonts:', error);
     }
 }
 
