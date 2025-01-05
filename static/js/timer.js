@@ -76,7 +76,8 @@ class Timer {
         }
 
         this.ctx.fillStyle = this.settings.textColor;
-        this.ctx.font = `${this.settings.fontSize}px "${this.settings.fontFamily}"`;
+        const variant = JSON.parse(this.settings.fontVariant || '{"weight":"normal","style":"normal","stretch":"normal"}');
+        this.ctx.font = `${variant.style} ${variant.weight} ${variant.stretch} ${this.settings.fontSize}px "${this.settings.fontFamily}"`;
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
 

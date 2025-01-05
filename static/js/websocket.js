@@ -37,13 +37,48 @@ async function populateSystemFonts() {
         if ('queryLocalFonts' in window) {
             const availableFonts = await window.queryLocalFonts();
             fontFamily.innerHTML = ''; // Clear existing options
-            const uniqueFonts = new Set(availableFonts.map(font => font.family));
-            uniqueFonts.forEach(font => {
+            
+            // Create a map of fonts and their variants
+            const fontMap = new Map();
+            availableFonts.forEach(font => {
+                if (!fontMap.has(font.family)) {
+                    fontMap.set(font.family, new Set());
+                }
+                fontMap.get(font.family).add(JSON.stringify({
+                    weight: font.weight,
+                    style: font.style,
+                    stretch: font.stretch
+                }));
+            });
+
+            // Populate font families
+            [...fontMap.keys()].sort().forEach(font => {
                 const option = document.createElement('option');
                 option.value = font;
                 option.textContent = font;
                 fontFamily.appendChild(option);
             });
+
+            // Function to update variants
+            const updateVariants = () => {
+                const variants = fontMap.get(fontFamily.value);
+                const variantSelect = document.getElementById('fontVariant');
+                variantSelect.innerHTML = '';
+                
+                [...variants].map(v => JSON.parse(v))
+                    .sort((a, b) => parseInt(a.weight) - parseInt(b.weight))
+                    .forEach(variant => {
+                        const option = document.createElement('option');
+                        const variantDesc = `${variant.weight} ${variant.style} ${variant.stretch}`;
+                        option.value = JSON.stringify(variant);
+                        option.textContent = variantDesc;
+                        variantSelect.appendChild(option);
+                    });
+            };
+
+            // Initial variant population
+            updateVariants();
+            fontFamily.addEventListener('change', updateVariants);
         } else {
             console.log('Local Font Access API not supported');
         }
