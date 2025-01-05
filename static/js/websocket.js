@@ -69,11 +69,20 @@ async function populateSystemFonts() {
                     .sort((a, b) => parseInt(a.weight) - parseInt(b.weight))
                     .forEach(variant => {
                         const option = document.createElement('option');
-                        let variantDesc = '';
+                        const weightMap = {
+                            '100': 'Thin',
+                            '200': 'Extra Light',
+                            '300': 'Light',
+                            '400': 'Regular',
+                            '500': 'Medium',
+                            '600': 'Semi Bold',
+                            '700': 'Bold',
+                            '800': 'Extra Bold',
+                            '900': 'Black'
+                        };
+                        let variantDesc = weightMap[variant.weight] || variant.weight;
                         if (variant.style !== 'normal') {
-                            variantDesc = `${variant.weight} ${variant.style}`;
-                        } else {
-                            variantDesc = variant.weight;
+                            variantDesc += ` ${variant.style}`;
                         }
                         option.value = JSON.stringify(variant);
                         option.textContent = variantDesc;
@@ -124,6 +133,7 @@ if (document.readyState === 'loading') {
                 textColor: textColor.value,
                 backgroundColor: backgroundColor.value,
                 fontFamily: fontFamily.value,
+                fontVariant: document.getElementById('fontVariant').value,
                 fontSize: parseInt(fontSize.value),
                 endMessage: endMessage.value
             }
