@@ -69,7 +69,10 @@ async function populateSystemFonts() {
                     .sort((a, b) => parseInt(a.weight) - parseInt(b.weight))
                     .forEach(variant => {
                         const option = document.createElement('option');
-                        const variantDesc = `${variant.weight} ${variant.style} ${variant.stretch}`;
+                        let variantDesc = variant.weight;
+                        if (variant.style !== 'normal') {
+                            variantDesc += ` ${variant.style}`;
+                        }
                         option.value = JSON.stringify(variant);
                         option.textContent = variantDesc;
                         variantSelect.appendChild(option);
