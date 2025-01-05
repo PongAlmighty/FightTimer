@@ -30,6 +30,31 @@ if (document.querySelector('.control-panel')) {
     const textColor = document.getElementById('textColor');
     const backgroundColor = document.getElementById('backgroundColor');
     const fontFamily = document.getElementById('fontFamily');
+
+// Populate font selector with system fonts
+function populateSystemFonts() {
+    const fonts = window.queryLocalFonts ? window.queryLocalFonts() : null;
+    if (fonts) {
+        fonts.then(fontData => {
+            fontFamily.innerHTML = ''; // Clear existing options
+            const uniqueFonts = new Set(fontData.map(font => font.family));
+            uniqueFonts.forEach(font => {
+                const option = document.createElement('option');
+                option.value = font;
+                option.textContent = font;
+                fontFamily.appendChild(option);
+            });
+        }).catch(() => {
+            console.log('Unable to access system fonts');
+        });
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', populateSystemFonts);
+} else {
+    populateSystemFonts();
+}
     const fontSize = document.getElementById('fontSize');
     const endMessage = document.getElementById('endMessage');
 
