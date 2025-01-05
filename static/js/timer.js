@@ -76,7 +76,7 @@ class Timer {
         }
 
         this.ctx.fillStyle = this.settings.textColor;
-        this.ctx.font = `${this.settings.fontSize}px ${this.settings.fontFamily}`;
+        this.ctx.font = `${this.settings.fontSize}px "${this.settings.fontFamily}"`;
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
 
