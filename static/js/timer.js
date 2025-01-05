@@ -2,13 +2,13 @@ class Timer {
     constructor() {
         this.canvas = document.getElementById('timerCanvas');
         this.ctx = this.canvas.getContext('2d');
-        this.timeLeft = 300; // 5 minutes default
+        this.timeLeft = 180; // 3 minutes default
         this.isRunning = false;
         this.endMessage = 'TIME';
         this.settings = {
-            textColor: '#ffffff',
-            backgroundColor: '#000000',
-            fontFamily: 'Arial',
+            textColor: '#000000',
+            backgroundColor: '#00ff00',
+            fontFamily: 'DSEG14 Modern',
             fontSize: 100
         };
 
@@ -33,7 +33,7 @@ class Timer {
         this.isRunning = false;
     }
 
-    reset(minutes = 5, seconds = 0) {
+    reset(minutes = 3, seconds = 0) {
         this.timeLeft = (minutes * 60) + seconds;
         this.draw();
     }
