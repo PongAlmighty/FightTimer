@@ -2,20 +2,38 @@ import logging
 import os
 from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO, emit
+from font_manager import FontManager
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+# Initialize Flask app and SocketIO
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'development-key')
 socketio = SocketIO(app, cors_allowed_origins="*")  # Allow all origins in development
+
+# Initialize the font manager
+font_manager = FontManager()
 
 @app.route('/')
 def index():
     """Render the timer display page."""
     logger.debug("Serving index page")
     return render_template('index.html')
+
+@app.route('/fonts/status')
+def font_status():
+    """Return status of downloaded fonts."""
+    if not os.path.exists(font_manager.font_dir):
+        return jsonify({"status": "no_fonts", "message": "No fonts have been downloaded yet"})
+    
+    font_files = [f for f in os.listdir(font_manager.font_dir) if f.endswith('.css') or f.endswith('.woff2')]
+    return jsonify({
+        "status": "success",
+        "fonts_count": len(font_files),
+        "fonts": font_files
+    })
 
 @app.route('/control')
 def control():
@@ -46,6 +64,17 @@ def timer_api():
     if action == 'settings':
         settings = data.get('settings', {})
         logger.debug(f"API received settings update: {settings}")
+        
+        # If there's a Google Font URL, download it locally
+        if settings.get('googleFontUrl'):
+            google_font_url = settings['googleFontUrl']
+            local_font_url = font_manager.get_local_font_url(google_font_url)
+            
+            if local_font_url:
+                # Replace the Google Font URL with the local URL
+                settings['googleFontUrl'] = local_font_url
+                logger.debug(f"Replaced Google Font URL with local URL: {local_font_url}")
+        
         socketio.emit('timer_update', {'action': 'settings', 'settings': settings})
         return jsonify({"status": "success"})
     else:
@@ -62,6 +91,17 @@ def timer_api():
 def handle_timer_control(data):
     """Handle timer control events from Companion or control panel."""
     logger.debug(f"Received timer control: {data}")
+    
+    # If this is a settings update with a Google Font URL, download it locally
+    if data.get('action') == 'settings' and data.get('settings', {}).get('googleFontUrl'):
+        google_font_url = data['settings']['googleFontUrl']
+        local_font_url = font_manager.get_local_font_url(google_font_url)
+        
+        if local_font_url:
+            # Replace the Google Font URL with the local URL
+            data['settings']['googleFontUrl'] = local_font_url
+            logger.debug(f"Replaced Google Font URL with local URL: {local_font_url}")
+    
     emit('timer_update', data, broadcast=True)
 
 @socketio.on('connect')
@@ -69,6 +109,14 @@ def handle_connect():
     """Handle client connection."""
     logger.debug("Client connected")
     emit('connection_response', {'status': 'connected'})
+
+@socketio.on('request_current_settings')
+def handle_settings_request():
+    """Handle request for current settings."""
+    logger.debug("Client requested current settings")
+    # This would ideally fetch from a database
+    # For now, we'll just acknowledge the request
+    emit('settings_response', {'status': 'acknowledged'})
 
 @socketio.on('disconnect')
 def handle_disconnect():

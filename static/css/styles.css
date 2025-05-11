@@ -94,11 +94,12 @@ button:hover {
     background-color: white;
     padding: 1.5rem;
     border-radius: 4px;
+    color: #555; /* Dark gray text for better contrast */
 }
 
 .customization h2 {
     margin-bottom: 1rem;
-    color: #333;
+    color: #333; /* Dark gray for headings */
 }
 
 .color-picker,
@@ -111,7 +112,7 @@ button:hover {
 .customization label {
     display: block;
     margin-bottom: 0.5rem;
-    color: #666;
+    color: #555; /* Slightly darker gray for labels */
 }
 
 .customization input[type="color"],
@@ -125,6 +126,18 @@ button:hover {
 
 .customization input[type="range"] {
     width: 100%;
+}
+
+/* Google Font section styling */
+.google-font small,
+.google-font #detected-font-container,
+.google-font #google-font-feedback {
+    color: #555; /* Dark gray text for better contrast */
+}
+
+#detected-font-name {
+    font-weight: bold;
+    color: #333;
 }
 
 /* Setup Info */

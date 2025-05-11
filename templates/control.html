@@ -44,9 +44,22 @@
                     <option value="normal">Normal</option>
                 </select>
             </div>
+            <!-- Inline color warning placeholder -->
+            <div id="color-warning-placeholder"></div>
             <div class="font-size">
                 <label for="fontSize">Font Size:</label>
                 <input type="range" id="fontSize" min="20" max="200" value="100">
+            </div>
+            <div class="google-font">
+                <label for="googleFontUrl">Google Font URL:</label>
+                <input type="text" id="googleFontUrl" placeholder="https://fonts.googleapis.com/css2?family=Roboto:wght@400&display=swap">
+                <div id="detected-font-container" style="display: none; margin-top: 0.5em;">
+                    <strong>Detected Font Family:</strong> <span id="detected-font-name"></span>
+                </div>
+                <input type="hidden" id="googleFontFamily">
+                <button type="button" id="addGoogleFontBtn">Add Font</button>
+                <small>Paste a Google Fonts CSS URL. The font family name will be automatically detected.</small>
+                <div id="google-font-feedback" style="margin-top: 0.5em;"></div>
             </div>
             <div class="end-message">
                 <label for="endMessage">End Message:</label>
