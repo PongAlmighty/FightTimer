@@ -81,143 +81,173 @@ launchctl start com.fighttimer.app
 
 ---
 
-## Bitfocus Companion API Integration
+## API Documentation
 
-The FightTimer API can be controlled remotely via HTTP POST requests. This makes it perfect for integration with Bitfocus Companion or other automation tools.
+The FightTimer application exposes a REST API endpoint for remote control. This is primarily designed for integrations like Bitfocus Companion.
 
-### API Examples
+**Base URL:** `http://<your-server-address>:8765` (Default: `http://localhost:8765`)
 
-#### Status Check
-```sh
-# Get current timer state and settings
-curl http://localhost:8765/api/timer
-```
-Response:
-```json
-{
-  "running": false,
-  "minutes": 3,
-  "seconds": 0,
-  "settings": {
-    "textColor": "#000000",
-    "backgroundColor": "#00ff00",
-    "fontFamily": "Arial",
-    "fontSize": 100,
-    "fontVariant": "normal",
-    "endMessage": "TIME"
-  }
-}
-```
+### Endpoint: `/api/timer`
 
-#### Start Timer
-```sh
-# Start with default time (from last settings)
-curl -X POST http://localhost:8765/api/timer \
-  -H "Content-Type: application/json" \
-  -d '{"action": "start"}'
+This is the main endpoint for interacting with the timer.
 
-# Start with specific time
-curl -X POST http://localhost:8765/api/timer \
-  -H "Content-Type: application/json" \
-  -d '{"action": "start", "minutes": 3, "seconds": 0}'
+#### Method: `GET`
 
-# Start with 30 seconds
-curl -X POST http://localhost:8765/api/timer \
-  -H "Content-Type: application/json" \
-  -d '{"action": "start", "minutes": 0, "seconds": 30}'
-```
+-   **Description:** Checks the status of the API and lists supported actions. Note: This endpoint does *not* return the current timer's detailed state (e.g., time remaining, current settings). Timer state updates are broadcast via WebSockets.
+-   **Response Body (JSON):**
+    ```json
+    {
+      "status": "success",
+      "message": "Timer API endpoint is active",
+      "supported_actions": ["start", "stop", "reset", "settings"]
+    }
+    ```
+-   **Example (`curl`):**
+    ```bash
+    curl http://localhost:8765/api/timer
+    ```
 
-#### Stop Timer
-```sh
-# Pause the timer (can be resumed with start)
-curl -X POST http://localhost:8765/api/timer \
-  -H "Content-Type: application/json" \
-  -d '{"action": "stop"}'
-```
+#### Method: `POST`
 
-#### Reset Timer
-```sh
-# Reset to initial time values
-curl -X POST http://localhost:8765/api/timer \
-  -H "Content-Type: application/json" \
-  -d '{"action": "reset"}'
-```
+-   **Description:** Sends commands to control the timer or update its settings.
+-   **Request Headers:**
+    -   `Content-Type: application/json`
+-   **Request Body (JSON):**
+    -   `action` (string, required): The action to perform. Valid actions are:
+        -   `"start"`: Starts or resumes the timer.
+        -   `"stop"`: Pauses the timer.
+        -   `"reset"`: Resets the timer.
+        -   `"settings"`: Updates timer settings.
 
-#### Update Settings (Colors, Message, etc.)
-```sh
-# Update all settings at once
-curl -X POST http://localhost:8765/api/timer \
-  -H "Content-Type: application/json" \
-  -d '{"action": "settings", "settings": {"textColor": "#000000", "backgroundColor": "#00ff00", "fontFamily": "Arial", "fontSize": 100, "fontVariant": "normal", "endMessage": "TIME"}}'
+-   **Actions Details:**
 
-# Update only text color to red
-curl -X POST http://localhost:8765/api/timer \
-  -H "Content-Type: application/json" \
-  -d '{"action": "settings", "settings": {"textColor": "#FF0000"}}'
+    -   **`"action": "start"`**
+        -   **Description:** Starts the timer from a specified time or resumes it if paused.
+        -   **Additional Body Parameters (optional):**
+            -   `minutes` (integer): Initial minutes for the timer (e.g., `5`). Defaults to the last set time or 3 if never set.
+            -   `seconds` (integer): Initial seconds for the timer (e.g., `30`). Defaults to the last set time or 0 if never set.
+        -   **Example (`curl`):**
+            ```bash
+            # Start/resume with default/previous time
+            curl -X POST -H "Content-Type: application/json" -d '{"action": "start"}' http://localhost:8765/api/timer
 
-# Update font size and end message
-curl -X POST http://localhost:8765/api/timer \
-  -H "Content-Type: application/json" \
-  -d '{"action": "settings", "settings": {"fontSize": 150, "endMessage": "FIGHT!"}}'
-```
+            # Start a new timer for 2 minutes and 30 seconds
+            curl -X POST -H "Content-Type: application/json" -d '{"action": "start", "minutes": 2, "seconds": 30}' http://localhost:8765/api/timer
+            ```
 
-#### Supported Actions
-- `start`: Start the timer (optionally specify `minutes` and `seconds`)
-- `stop`: Stop/pause the timer
-- `reset`: Reset the timer to initial value
-- `settings`: Update timer appearance/settings
-  - `textColor`: Color for the timer text (hex format)
-  - `backgroundColor`: Background color (hex format)
-  - `fontFamily`: Font family name
-  - `fontSize`: Font size (numeric value)
-  - `fontVariant`: Font weight/style variant (e.g., "normal", "bold", etc.)
-  - `endMessage`: Text to display when timer reaches zero
+    -   **`"action": "stop"`**
+        -   **Description:** Pauses the currently running timer.
+        -   **Example (`curl`):**
+            ```bash
+            curl -X POST -H "Content-Type: application/json" -d '{"action": "stop"}' http://localhost:8765/api/timer
+            ```
 
-### Bitfocus Companion Integration Tips
+    -   **`"action": "reset"`**
+        -   **Description:** Stops the timer and resets it to the initial time values (typically the last values used for a `start` action, or defaults to 3 minutes if no specific time has been set).
+        -   **Example (`curl`):**
+            ```bash
+            curl -X POST -H "Content-Type: application/json" -d '{"action": "reset"}' http://localhost:8765/api/timer
+            ```
 
-#### Button Setup Examples
+    -   **`"action": "settings"`**
+        -   **Description:** Updates various appearance and behavior settings of the timer.
+        -   **Additional Body Parameters (required):**
+            -   `settings` (object): An object containing one or more settings to update.
+                -   `textColor` (string, optional): Timer text color (hex format, e.g., `"#FFFFFF"`).
+                -   `backgroundColor` (string, optional): Timer background color (hex format, e.g., `"#000000"`).
+                -   `fontFamily` (string, optional): Font family name (e.g., `"Arial"`, `"Roboto"`).
+                -   `fontSize` (integer, optional): Font size in pixels (e.g., `100`).
+                -   `fontVariant` (string, optional): Font weight and/or style (e.g., `"normal"`, `"bold"`, `"700 italic"`). Refer to CSS `font-style` and `font-weight` for common values.
+                -   `endMessage` (string, optional): Text displayed when the timer reaches zero (e.g., `"TIME'S UP!"`).
+                -   `googleFontUrl` (string, optional): URL to a Google Fonts stylesheet (e.g., `"https://fonts.googleapis.com/css2?family=Roboto:wght@700&display=swap"`). The server will attempt to download and cache this font for offline use. If a new `googleFontUrl` is provided, it replaces any previous one.
+        -   **Example (`curl`):**
+            ```bash
+            # Update text color to red and font size to 120px
+            curl -X POST -H "Content-Type: application/json" \
+                 -d '{"action": "settings", "settings": {"textColor": "#FF0000", "fontSize": 120}}' \
+                 http://localhost:8765/api/timer
 
-1. **Start 3-Minute Timer Button**:
-   - Type: HTTP POST
-   - URL: `http://localhost:8765/api/timer`
-   - Body: `{"action": "start", "minutes": 3, "seconds": 0}`
-   - Content-Type: `application/json`
+            # Change the end message and set a Google Font
+            curl -X POST -H "Content-Type: application/json" \
+                 -d '{"action": "settings", "settings": {"endMessage": "Round Over", "googleFontUrl": "https://fonts.googleapis.com/css2?family=Lato&display=swap"}}' \
+                 http://localhost:8765/api/timer
+            ```
+-   **Success Response (for all POST actions):**
+    ```json
+    {
+      "status": "success"
+    }
+    ```
+-   **Error Responses (for all POST actions):**
+    -   If no JSON data provided (Status Code: 400):
+        ```json
+        { "error": "No data provided" } 
+        ```
+    -   If `action` is invalid (Status Code: 400):
+        ```json
+        { "error": "Invalid action" }
+        ```
 
-2. **Start 30-Second Timer Button**:
-   - Type: HTTP POST
-   - URL: `http://localhost:8765/api/timer`
-   - Body: `{"action": "start", "minutes": 0, "seconds": 30}`
-   - Content-Type: `application/json`
+## Bitfocus Companion Integration
 
-3. **Pause/Stop Button**:
-   - Type: HTTP POST
-   - URL: `http://localhost:8765/api/timer`
-   - Body: `{"action": "stop"}`
-   - Content-Type: `application/json`
+FightTimer can be easily controlled using Bitfocus Companion, allowing you to trigger timer actions from a Stream Deck or other control surfaces.
 
-4. **Reset Button**:
-   - Type: HTTP POST
-   - URL: `http://localhost:8765/api/timer`
-   - Body: `{"action": "reset"}`
-   - Content-Type: `application/json`
+Companion communicates with FightTimer using its REST API. You'll typically use the "Generic HTTP Request" action in Companion (often found as "HTTP POST" or similar, depending on the Companion module version).
 
-5. **Change to Red Text Button**:
-   - Type: HTTP POST
-   - URL: `http://localhost:8765/api/timer`
-   - Body: `{"action": "settings", "settings": {"textColor": "#FF0000"}}`
-   - Content-Type: `application/json`
+**Target URL:** `http://<IP_ADDRESS_OF_FIGHTTIMER_SERVER>:8765/api/timer`
+(Replace `<IP_ADDRESS_OF_FIGHTTIMER_SERVER>` with the actual IP address or hostname where FightTimer is running. If Companion is on the same machine, you can use `http://localhost:8765/api/timer`.)
 
-6. **Change to Green Text Button**:
-   - Type: HTTP POST
-   - URL: `http://localhost:8765/api/timer`
-   - Body: `{"action": "settings", "settings": {"textColor": "#00FF00"}}`
-   - Content-Type: `application/json`
+**Content-Type:** `application/json` (This should be set for all POST requests in Companion, usually in the request headers option.)
 
-7. **Change End Message Button**:
-   - Type: HTTP POST
-   - URL: `http://localhost:8765/api/timer`
-   - Body: `{"action": "settings", "settings": {"endMessage": "FIGHT!"}}`
-   - Content-Type: `application/json`
+### API Usage Notes for Companion:
+-   The API is primarily for *sending commands*. To see the current timer status (time remaining, colors, etc.), you should have the FightTimer display page (`http://<IP_ADDRESS_OF_FIGHTTIMER_SERVER>:8765/`) open on a screen visible to the operator, or use the control panel (`http://<IP_ADDRESS_OF_FIGHTTIMER_SERVER>:8765/control`).
+-   For a full list of API actions and parameters, please refer to the [API Documentation](#api-documentation) section above.
+
+### Common Companion Button Examples:
+
+1.  **Start 3-Minute Timer:**
+    -   **Action Type:** Generic HTTP Request
+    -   **Method:** POST
+    -   **URL:** `http://localhost:8765/api/timer`
+    -   **Headers:** `Content-Type: application/json`
+    -   **JSON Body:** `{"action": "start", "minutes": 3, "seconds": 0}`
+
+2.  **Start 30-Second Warning Timer:**
+    -   **Action Type:** Generic HTTP Request
+    -   **Method:** POST
+    -   **URL:** `http://localhost:8765/api/timer`
+    -   **Headers:** `Content-Type: application/json`
+    -   **JSON Body:** `{"action": "start", "minutes": 0, "seconds": 30}`
+
+3.  **Pause/Stop Timer:**
+    -   **Action Type:** Generic HTTP Request
+    -   **Method:** POST
+    -   **URL:** `http://localhost:8765/api/timer`
+    -   **Headers:** `Content-Type: application/json`
+    -   **JSON Body:** `{"action": "stop"}`
+
+4.  **Reset Timer:**
+    -   **Action Type:** Generic HTTP Request
+    -   **Method:** POST
+    -   **URL:** `http://localhost:8765/api/timer`
+    -   **Headers:** `Content-Type: application/json`
+    -   **JSON Body:** `{"action": "reset"}`
+
+5.  **Change Colors (e.g., to Red Text on Black Background):**
+    -   **Action Type:** Generic HTTP Request
+    -   **Method:** POST
+    -   **URL:** `http://localhost:8765/api/timer`
+    -   **Headers:** `Content-Type: application/json`
+    -   **JSON Body:** `{"action": "settings", "settings": {"textColor": "#FF0000", "backgroundColor": "#000000"}}`
+
+6.  **Change End Message:**
+    -   **Action Type:** Generic HTTP Request
+    -   **Method:** POST
+    -   **URL:** `http://localhost:8765/api/timer`
+    -   **Headers:** `Content-Type: application/json`
+    -   **JSON Body:** `{"action": "settings", "settings": {"endMessage": "NEXT ROUND"}}`
+
+Remember to adjust the IP address in the URL if FightTimer is running on a different machine than Companion.
 
 ---
 
