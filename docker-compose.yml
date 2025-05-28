@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  fighttimer:
+    build: .
+    ports:
+      - "8765:8765"
+    volumes:
+      - ./static/fonts/google:/app/static/fonts/google
+    environment:
+      - FLASK_SECRET_KEY=your-secret-key-here
+      - PORT=8765
+    restart: unless-stopped

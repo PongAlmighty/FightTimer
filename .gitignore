@@ -70,3 +70,10 @@ Thumbs.db
 *.swp
 *.swo
 *~
+
+# Docker specific
+*.tar
+docker-compose-*.yml
+com.*.plist
+docker-compose-error.log
+docker-compose-output.log
