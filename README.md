@@ -188,6 +188,91 @@ This is the main endpoint for interacting with the timer.
         { "error": "Invalid action" }
         ```
 
+## WebSocket API for Real-time Updates
+
+For applications requiring real-time synchronization with the timer (like a custom hardware display), FightTimer provides a WebSocket interface powered by Flask-SocketIO.
+
+**WebSocket URL:** `ws://<your-server-address>:8765/socket.io/` (Default: `ws://localhost:8765/socket.io/`)
+
+(Note: The exact URL might vary slightly depending on the Socket.IO client library used. Most libraries handle the `/socket.io/` path automatically when given the base URL like `ws://localhost:8765`.)
+
+### Connecting
+
+1.  Establish a WebSocket connection to the server.
+2.  Upon successful connection, the server emits a `connection_response` event.
+
+### Key Server-Sent Events
+
+Listen for the following events from the server:
+
+1.  **`connection_response`**
+    -   **Description:** Confirms a successful WebSocket connection.
+    -   **Data:**
+        ```json
+        { "status": "connected" }
+        ```
+
+2.  **`timer_update`**
+    -   **Description:** This is the primary event for receiving timer state changes. It's emitted whenever the timer is started, stopped, reset, or its settings are updated (either via the control panel or the REST API).
+    -   **Data (JSON object):** The structure of the data object depends on the action that triggered the update.
+
+        -   **For `start`, `stop`, `reset` actions:**
+            ```json
+            {
+              "action": "start" | "stop" | "reset",
+              "minutes": 5, // Current minutes value
+              "seconds": 30, // Current seconds value
+              // Other potential fields related to the timer's internal state might be present
+            }
+            ```
+            *Note: When the timer is running, the client-side JavaScript in the official display page handles the per-second countdown. This `timer_update` event for `start` provides the initial time. For a hardware timer, you'll need to implement your own countdown logic based on the `minutes` and `seconds` received when `action` is `start`, and stop/pause when `action` is `stop` or `reset`.
+
+        -   **For `settings` action:**
+            ```json
+            {
+              "action": "settings",
+              "settings": {
+                "textColor": "#FFFFFF",
+                "backgroundColor": "#000000",
+                "fontFamily": "Arial",
+                "fontSize": 100,
+                "fontVariant": "normal",
+                "endMessage": "TIME'S UP!",
+                "googleFontUrl": "https://fonts.googleapis.com/css2?family=Roboto&display=swap" // This will be the local URL if caching was successful
+              }
+            }
+            ```
+            *Note: Not all settings fields will be present if only a partial update was made. The `settings` object will contain only the fields that were changed.*
+
+3.  **`settings_response`**
+    -   **Description:** Sent by the server in response to a `request_current_settings` event from the client. Currently, this just acknowledges the request.
+    -   **Data:**
+        ```json
+        { "status": "acknowledged" }
+        ```
+        *Note: As of the current implementation, this event does not return the actual settings data. To get the full settings, a client typically listens for `timer_update` events with `action: "settings"`.*
+
+### Client-Sent Events (Optional)
+
+While primarily for listening, a client *can* send events. The main one a custom client might consider is:
+
+1.  **`request_current_settings`**
+    -   **Description:** A client can emit this event to ask the server for the current settings. The server will respond with a `settings_response` (see above).
+    -   **Data:** No data payload is typically required for this event.
+    -   **Example (conceptual JavaScript):** `socket.emit('request_current_settings');`
+
+### Example Workflow for a Hardware Timer Client:
+
+1.  Connect to the WebSocket server.
+2.  On receiving `connection_response`, confirm connection.
+3.  Listen for `timer_update` events:
+    -   If `data.action` is `"start"`: Get `data.minutes` and `data.seconds`. Start your hardware countdown from this time.
+    -   If `data.action` is `"stop"` or `"reset"`: Pause or stop your hardware countdown.
+    -   If `data.action` is `"settings"`: Update any relevant display properties on your hardware (e.g., if your hardware can change colors based on `data.settings.textColor` or `data.settings.backgroundColor`).
+4.  (Optional) On connect, you might emit `request_current_settings` to trigger an initial settings update, though the server currently only acknowledges this. The first `timer_update` with an action of `settings` or `start` will provide initial state.
+
+This WebSocket interface allows for tight synchronization between the FightTimer application and any external displays or controllers.
+
 ## Bitfocus Companion Integration
 
 FightTimer can be easily controlled using Bitfocus Companion, allowing you to trigger timer actions from a Stream Deck or other control surfaces.
