@@ -11,6 +11,39 @@
     <div class="control-panel">
         <h1>Timer Control Panel</h1>
 
+        <!-- Mode indicator and multi-timer controls -->
+        <div class="mode-section">
+            <div class="mode-indicator">
+                <span id="mode-display">Mode: <strong id="current-mode">Loading...</strong></span>
+                <button id="toggle-mode-btn" class="mode-toggle-btn">Switch to Multi-Timer</button>
+            </div>
+            
+            <!-- Multi-timer controls (hidden by default) -->
+            <div id="multi-timer-controls" style="display: none;">
+                <div class="timer-selection">
+                    <label for="timer-selector">Select Timer:</label>
+                    <select id="timer-selector">
+                        <option value="1">Timer 1</option>
+                        <option value="2">Timer 2</option>
+                        <option value="3">Timer 3</option>
+                        <option value="4">Timer 4</option>
+                        <option value="5">Timer 5</option>
+                    </select>
+                </div>
+                
+                <div class="timer-enable-controls">
+                    <h3>Timer Status</h3>
+                    <div class="timer-checkboxes">
+                        <label><input type="checkbox" id="timer-1-enabled" value="1"> Timer 1</label>
+                        <label><input type="checkbox" id="timer-2-enabled" value="2"> Timer 2</label>
+                        <label><input type="checkbox" id="timer-3-enabled" value="3"> Timer 3</label>
+                        <label><input type="checkbox" id="timer-4-enabled" value="4"> Timer 4</label>
+                        <label><input type="checkbox" id="timer-5-enabled" value="5"> Timer 5</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="time-input">
             <label for="minutes">Minutes:</label>
             <input type="number" id="minutes" min="0" max="99" value="3">

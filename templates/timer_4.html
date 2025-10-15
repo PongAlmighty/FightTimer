@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timer 4 - OBS Timer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="timer-container">
+        <div class="timer-identification">
+            <span class="timer-id-badge">Timer 4</span>
+        </div>
+        <canvas id="timerCanvas"></canvas>
+    </div>
+
+    <div class="setup-info">
+        <p>Timer 4 Display | Control this timer at: <a href="/control" target="_blank">Timer Control Panel</a></p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+        // Set timer ID for this specific timer
+        window.TIMER_ID = 4;
+    </script>
+    <script src="{{ url_for('static', filename='js/timer.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/websocket.js') }}"></script>
+</body>
+</html>

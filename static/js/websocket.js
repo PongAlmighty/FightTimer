@@ -1,7 +1,154 @@
 // Enable font debugging
 window.DEBUG_FONTS = true;
 
-const socket = io();
+// TimerWebSocketManager class for handling timer-specific WebSocket connections
+class TimerWebSocketManager {
+    constructor(timerId = null) {
+        this.timerId = timerId;
+        this.socket = null;
+        this.isConnected = false;
+        this.reconnectAttempts = 0;
+        this.maxReconnectAttempts = 5;
+        this.reconnectDelay = 1000; // Start with 1 second
+        
+        this.connect();
+    }
+    
+    connect() {
+        try {
+            // Determine the appropriate namespace based on timer ID
+            if (this.timerId && this.timerId >= 1 && this.timerId <= 5) {
+                // Multi-timer mode: connect to timer-specific namespace
+                const namespace = `/timer/${this.timerId}`;
+                console.log(`Connecting to timer-specific namespace: ${namespace}`);
+                this.socket = io(namespace);
+            } else {
+                // Single-timer mode: connect to default namespace
+                console.log('Connecting to default namespace for single-timer mode');
+                this.socket = io();
+            }
+            
+            this.setupEventHandlers();
+        } catch (error) {
+            console.error('Error creating WebSocket connection:', error);
+            this.handleReconnect();
+        }
+    }
+    
+    setupEventHandlers() {
+        if (!this.socket) return;
+        
+        this.socket.on('connect', () => {
+            console.log(`WebSocket connected${this.timerId ? ` for timer ${this.timerId}` : ''}`);
+            this.isConnected = true;
+            this.reconnectAttempts = 0;
+            this.reconnectDelay = 1000; // Reset delay
+        });
+        
+        this.socket.on('disconnect', (reason) => {
+            console.log(`WebSocket disconnected${this.timerId ? ` for timer ${this.timerId}` : ''}: ${reason}`);
+            this.isConnected = false;
+            
+            // Only attempt reconnection for certain disconnect reasons
+            if (reason === 'io server disconnect') {
+                // Server initiated disconnect, don't reconnect automatically
+                console.log('Server initiated disconnect, not attempting reconnection');
+            } else {
+                // Client-side disconnect or network issue, attempt reconnection
+                this.handleReconnect();
+            }
+        });
+        
+        this.socket.on('connect_error', (error) => {
+            console.error(`WebSocket connection error${this.timerId ? ` for timer ${this.timerId}` : ''}:`, error);
+            this.isConnected = false;
+            this.handleReconnect();
+        });
+        
+        this.socket.on('connection_response', (data) => {
+            console.log(`Connection response${this.timerId ? ` for timer ${this.timerId}` : ''}:`, data);
+        });
+    }
+    
+    handleReconnect() {
+        if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+            console.error(`Max reconnection attempts reached${this.timerId ? ` for timer ${this.timerId}` : ''}`);
+            return;
+        }
+        
+        this.reconnectAttempts++;
+        console.log(`Attempting reconnection ${this.reconnectAttempts}/${this.maxReconnectAttempts}${this.timerId ? ` for timer ${this.timerId}` : ''} in ${this.reconnectDelay}ms`);
+        
+        setTimeout(() => {
+            this.connect();
+        }, this.reconnectDelay);
+        
+        // Exponential backoff with jitter
+        this.reconnectDelay = Math.min(this.reconnectDelay * 2 + Math.random() * 1000, 30000);
+    }
+    
+    emit(event, data) {
+        if (!this.socket || !this.isConnected) {
+            console.warn(`Cannot emit ${event}: WebSocket not connected${this.timerId ? ` for timer ${this.timerId}` : ''}`);
+            return false;
+        }
+        
+        // Add timer_id to data if in multi-timer mode
+        if (this.timerId && data && typeof data === 'object') {
+            data.timer_id = this.timerId;
+        }
+        
+        console.log(`Emitting ${event}${this.timerId ? ` for timer ${this.timerId}` : ''}:`, data);
+        this.socket.emit(event, data);
+        return true;
+    }
+    
+    on(event, callback) {
+        if (!this.socket) {
+            console.warn(`Cannot register event ${event}: WebSocket not initialized${this.timerId ? ` for timer ${this.timerId}` : ''}`);
+            return;
+        }
+        
+        this.socket.on(event, callback);
+    }
+    
+    off(event, callback) {
+        if (!this.socket) return;
+        this.socket.off(event, callback);
+    }
+    
+    disconnect() {
+        if (this.socket) {
+            console.log(`Disconnecting WebSocket${this.timerId ? ` for timer ${this.timerId}` : ''}`);
+            this.socket.disconnect();
+            this.socket = null;
+            this.isConnected = false;
+        }
+    }
+    
+    getConnectionStatus() {
+        return {
+            connected: this.isConnected,
+            timerId: this.timerId,
+            reconnectAttempts: this.reconnectAttempts
+        };
+    }
+}
+
+// Create WebSocket manager instance based on context
+let socketManager;
+if (typeof window !== 'undefined' && window.TIMER_ID) {
+    // Timer display page with specific timer ID
+    console.log(`Initializing WebSocket manager for timer ${window.TIMER_ID}`);
+    socketManager = new TimerWebSocketManager(window.TIMER_ID);
+} else {
+    // Control panel or single-timer mode
+    console.log('Initializing WebSocket manager for single-timer mode or control panel');
+    socketManager = new TimerWebSocketManager();
+}
+
+// Maintain backward compatibility with existing code
+const socket = socketManager.socket;
 
 // Constants for localStorage keys
 const TIMER_SETTINGS_KEY = 'fighttimer_settings';
@@ -38,10 +185,38 @@ if (document.getElementById('timerCanvas')) {
         document.head.appendChild(link);
     }
     
-    // Load saved settings on page load
-    const savedSettings = loadSettings();
+    // Load saved settings on page load with timer-specific key
+    function getTimerSettingsKey() {
+        if (window.TIMER_ID) {
+            return `${TIMER_SETTINGS_KEY}_timer_${window.TIMER_ID}`;
+        }
+        return TIMER_SETTINGS_KEY;
+    }
+    
+    function loadTimerSettings() {
+        try {
+            const settingsKey = getTimerSettingsKey();
+            const savedSettings = localStorage.getItem(settingsKey);
+            return savedSettings ? JSON.parse(savedSettings) : null;
+        } catch (e) {
+            console.warn('Failed to load timer settings from localStorage:', e);
+            return null;
+        }
+    }
+    
+    function saveTimerSettings(settings) {
+        try {
+            const settingsKey = getTimerSettingsKey();
+            localStorage.setItem(settingsKey, JSON.stringify(settings));
+            console.log(`Saved settings for ${window.TIMER_ID ? `timer ${window.TIMER_ID}` : 'single timer'}:`, settings);
+        } catch (e) {
+            console.warn('Failed to save timer settings to localStorage:', e);
+        }
+    }
+    
+    const savedSettings = loadTimerSettings();
     if (savedSettings) {
-        console.log('Restoring saved settings:', savedSettings);
+        console.log(`Restoring saved settings for ${window.TIMER_ID ? `timer ${window.TIMER_ID}` : 'single timer'}:`, savedSettings);
         if (savedSettings.googleFontUrl) {
             injectGoogleFont(savedSettings.googleFontUrl);
         }
@@ -51,13 +226,36 @@ if (document.getElementById('timerCanvas')) {
         }, 100);
     }
     
-    // Request current settings from server
-    socket.emit('request_current_settings');
+    // Request current settings from server using the WebSocket manager
+    const settingsRequest = {};
+    if (window.TIMER_ID) {
+        settingsRequest.timer_id = window.TIMER_ID;
+    }
+    console.log(`Requesting current settings${window.TIMER_ID ? ` for timer ${window.TIMER_ID}` : ''}`);
+    socketManager.emit('request_current_settings', settingsRequest);
     
-    socket.on('timer_update', (data) => {
+    // Also request current timer status to restore timer state
+    const statusRequest = {};
+    if (window.TIMER_ID) {
+        statusRequest.timer_id = window.TIMER_ID;
+    }
+    console.log(`Requesting timer status${window.TIMER_ID ? ` for timer ${window.TIMER_ID}` : ''}`);
+    socketManager.emit('request_timer_status', statusRequest);
+    
+    // Set up timer update handler using the WebSocket manager
+    socketManager.on('timer_update', (data) => {
+        console.log(`Timer update received${window.TIMER_ID ? ` for timer ${window.TIMER_ID}` : ''}:`, data);
+        
+        // Verify this update is for the correct timer in multi-timer mode
+        if (window.TIMER_ID && data.timer_id && data.timer_id !== window.TIMER_ID) {
+            console.warn(`Received timer update for timer ${data.timer_id} but this is timer ${window.TIMER_ID}, ignoring`);
+            return;
+        }
+        
         if (data.settings && data.settings.googleFontUrl) {
             injectGoogleFont(data.settings.googleFontUrl);
         }
+        
         switch (data.action) {
             case 'start':
                 timer.start();
@@ -69,10 +267,99 @@ if (document.getElementById('timerCanvas')) {
                 timer.reset(data.minutes, data.seconds);
                 break;
             case 'settings':
-                // Save settings to localStorage for persistence
-                saveSettings(data.settings);
+                // Save settings to localStorage for persistence (timer-specific)
+                saveTimerSettings(data.settings);
                 timer.updateSettings(data.settings);
                 break;
+        }
+    });
+    
+    // Handle settings response from server
+    socketManager.on('settings_response', (data) => {
+        console.log(`Settings response received${window.TIMER_ID ? ` for timer ${window.TIMER_ID}` : ''}:`, data);
+        
+        if (data.status === 'success' && data.settings) {
+            // Verify this response is for the correct timer in multi-timer mode
+            if (window.TIMER_ID && data.timer_id && data.timer_id !== window.TIMER_ID) {
+                console.warn(`Received settings response for timer ${data.timer_id} but this is timer ${window.TIMER_ID}, ignoring`);
+                return;
+            }
+            
+            // Apply the settings
+            if (data.settings.googleFontUrl) {
+                injectGoogleFont(data.settings.googleFontUrl);
+            }
+            
+            // Save settings to localStorage for persistence (timer-specific)
+            saveTimerSettings(data.settings);
+            
+            // Apply settings to timer
+            timer.updateSettings(data.settings);
+            
+            console.log(`Applied settings from server${window.TIMER_ID ? ` for timer ${window.TIMER_ID}` : ''}`);
+        } else if (data.status === 'error') {
+            console.error(`Settings request failed${window.TIMER_ID ? ` for timer ${window.TIMER_ID}` : ''}: ${data.message}`);
+        }
+    });
+    
+    // Handle timer status response from server
+    socketManager.on('timer_status', (data) => {
+        console.log(`Timer status received${window.TIMER_ID ? ` for timer ${window.TIMER_ID}` : ''}:`, data);
+        
+        // Verify this status is for the correct timer in multi-timer mode
+        if (window.TIMER_ID && data.timer_id && data.timer_id !== window.TIMER_ID) {
+            console.warn(`Received timer status for timer ${data.timer_id} but this is timer ${window.TIMER_ID}, ignoring`);
+            return;
+        }
+        
+        // Restore timer state
+        if (data.time_left !== undefined) {
+            timer.timeLeft = data.time_left;
+        }
+        
+        if (data.is_running !== undefined) {
+            timer.isRunning = data.is_running;
+            if (timer.isRunning) {
+                // If timer is running, start the tick process
+                timer.tick();
+            }
+        }
+        
+        // Redraw the timer with the restored state
+        timer.draw();
+        
+        console.log(`Restored timer state${window.TIMER_ID ? ` for timer ${window.TIMER_ID}` : ''}: ${data.time_left}s, running: ${data.is_running}`);
+    });
+    
+    // Handle error responses
+    socketManager.on('error', (data) => {
+        console.error(`WebSocket error${window.TIMER_ID ? ` for timer ${window.TIMER_ID}` : ''}:`, data);
+        
+        // If timer not found, this might be a new timer that needs initialization
+        if (data.message && data.message.includes('not found') && window.TIMER_ID) {
+            console.log(`Timer ${window.TIMER_ID} not found on server, it may need to be initialized`);
+            // The timer will be created automatically when the control panel interacts with it
+        }
+    });
+    
+    // Handle connection events
+    socketManager.on('connection_response', (data) => {
+        console.log(`Connection established${window.TIMER_ID ? ` for timer ${window.TIMER_ID}` : ''}:`, data);
+        
+        // Re-request settings and status after connection is established
+        if (data.status === 'connected') {
+            setTimeout(() => {
+                const settingsRequest = {};
+                const statusRequest = {};
+                if (window.TIMER_ID) {
+                    settingsRequest.timer_id = window.TIMER_ID;
+                    statusRequest.timer_id = window.TIMER_ID;
+                }
+                
+                console.log(`Re-requesting settings and status after connection${window.TIMER_ID ? ` for timer ${window.TIMER_ID}` : ''}`);
+                socketManager.emit('request_current_settings', settingsRequest);
+                socketManager.emit('request_timer_status', statusRequest);
+            }, 100); // Small delay to ensure connection is fully established
         }
     });
 }
@@ -668,20 +955,42 @@ if (document.querySelector('.control-panel')) {
         populateSystemFonts();
     }
 
+    // Enhanced timer control handlers for multi-timer support
     startBtn.addEventListener('click', () => {
-        socket.emit('timer_control', { action: 'start' });
+        const controlData = { action: 'start' };
+        
+        // Add timer_id if in multi-timer mode
+        if (multiTimerControls && multiTimerControls.style.display !== 'none') {
+            controlData.timer_id = currentSelectedTimer;
+        }
+        
+        socketManager.emit('timer_control', controlData);
     });
 
     stopBtn.addEventListener('click', () => {
-        socket.emit('timer_control', { action: 'stop' });
+        const controlData = { action: 'stop' };
+        
+        // Add timer_id if in multi-timer mode
+        if (multiTimerControls && multiTimerControls.style.display !== 'none') {
+            controlData.timer_id = currentSelectedTimer;
+        }
+        
+        socketManager.emit('timer_control', controlData);
     });
 
     resetBtn.addEventListener('click', () => {
-        socket.emit('timer_control', {
+        const controlData = {
             action: 'reset',
             minutes: parseInt(minutesInput.value),
             seconds: parseInt(secondsInput.value)
-        });
+        };
+        
+        // Add timer_id if in multi-timer mode
+        if (multiTimerControls && multiTimerControls.style.display !== 'none') {
+            controlData.timer_id = currentSelectedTimer;
+        }
+        
+        socketManager.emit('timer_control', controlData);
     });
 
     // Handle settings changes
@@ -794,8 +1103,8 @@ if (document.querySelector('.control-panel')) {
             injectGoogleFont(fontUrl);
         }
         
-        // Send settings to server
-        socket.emit('timer_control', { action: 'settings', settings });
+        // Send settings to server using WebSocket manager
+        socketManager.emit('timer_control', { action: 'settings', settings });
         
         // Provide feedback that settings were applied
         const feedbackEl = document.getElementById('settings-feedback') || (() => {
@@ -828,5 +1137,426 @@ if (document.querySelector('.control-panel')) {
         
         // Log that we're preserving the font choice
         console.log(`Font size changed, preserving font family: ${currentFontFamily} (Google Font: ${isGoogleFont})`);
+    });
+
+    // Multi-timer control functionality
+    const modeDisplay = document.getElementById('current-mode');
+    const multiTimerControls = document.getElementById('multi-timer-controls');
+    const timerSelector = document.getElementById('timer-selector');
+    const toggleModeBtn = document.getElementById('toggle-mode-btn');
+    
+    // Timer enable/disable checkboxes
+    const timerCheckboxes = {};
+    for (let i = 1; i <= 5; i++) {
+        timerCheckboxes[i] = document.getElementById(`timer-${i}-enabled`);
+    }
+    
+    // Current selected timer for settings management
+    let currentSelectedTimer = 1;
+    
+    // Timer-specific settings storage
+    const MULTI_TIMER_SETTINGS_KEY = 'fighttimer_multi_timer_settings';
+    
+    function saveTimerSettings(timerId, settings) {
+        try {
+            const allTimerSettings = JSON.parse(localStorage.getItem(MULTI_TIMER_SETTINGS_KEY) || '{}');
+            allTimerSettings[timerId] = settings;
+            localStorage.setItem(MULTI_TIMER_SETTINGS_KEY, JSON.stringify(allTimerSettings));
+            console.log(`Saved settings for timer ${timerId}:`, settings);
+        } catch (e) {
+            console.warn('Failed to save timer settings to localStorage:', e);
+        }
+    }
+    
+    function loadTimerSettings(timerId) {
+        try {
+            const allTimerSettings = JSON.parse(localStorage.getItem(MULTI_TIMER_SETTINGS_KEY) || '{}');
+            return allTimerSettings[timerId] || null;
+        } catch (e) {
+            console.warn('Failed to load timer settings from localStorage:', e);
+            return null;
+        }
+    }
+    
+    function saveTimerEnabledState(timerId, enabled) {
+        try {
+            const enabledStates = JSON.parse(localStorage.getItem('fighttimer_timer_enabled_states') || '{}');
+            enabledStates[timerId] = enabled;
+            localStorage.setItem('fighttimer_timer_enabled_states', JSON.stringify(enabledStates));
+        } catch (e) {
+            console.warn('Failed to save timer enabled state:', e);
+        }
+    }
+    
+    function loadTimerEnabledState(timerId) {
+        try {
+            const enabledStates = JSON.parse(localStorage.getItem('fighttimer_timer_enabled_states') || '{}');
+            return enabledStates[timerId] !== undefined ? enabledStates[timerId] : true; // Default to enabled
+        } catch (e) {
+            console.warn('Failed to load timer enabled state:', e);
+            return true;
+        }
+    }
+    
+    function updateModeDisplay(mode) {
+        if (modeDisplay) {
+            modeDisplay.textContent = mode === 'multi' ? 'Multi-Timer' : 'Single Timer';
+        }
+        
+        if (multiTimerControls) {
+            multiTimerControls.style.display = mode === 'multi' ? 'block' : 'none';
+        }
+        
+        if (toggleModeBtn) {
+            toggleModeBtn.textContent = mode === 'multi' ? 'Switch to Single Timer' : 'Switch to Multi-Timer';
+        }
+    }
+    
+    // Mode switching functionality
+    async function switchMode(newMode) {
+        try {
+            console.log(`Switching to ${newMode} mode...`);
+            
+            const response = await fetch('/api/mode', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ mode: newMode })
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                console.log(`Successfully switched to ${newMode} mode`);
+                updateModeDisplay(newMode);
+                
+                // Save mode preference to localStorage
+                try {
+                    localStorage.setItem('timerMode', newMode);
+                } catch (e) {
+                    console.warn('Failed to save mode preference to localStorage:', e);
+                }
+                
+                // If switching to multi-timer mode, load settings for timer 1
+                if (newMode === 'multi') {
+                    loadSettingsForTimer(1);
+                }
+                
+                // Show success feedback
+                showModeChangeSuccess(newMode);
+            } else {
+                console.error('Failed to switch mode:', data.error);
+                showModeChangeError(data.error);
+            }
+        } catch (error) {
+            console.error('Error switching mode:', error);
+            showModeChangeError('Network error occurred while switching mode');
+        }
+    }
+    
+    function showModeChangeSuccess(mode) {
+        const feedback = document.createElement('div');
+        feedback.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #4CAF50;
+            color: white;
+            padding: 1rem;
+            border-radius: 4px;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        `;
+        feedback.textContent = `Switched to ${mode === 'multi' ? 'Multi-Timer' : 'Single Timer'} mode`;
+        document.body.appendChild(feedback);
+        
+        setTimeout(() => {
+            document.body.removeChild(feedback);
+        }, 3000);
+    }
+    
+    function showModeChangeError(error) {
+        const feedback = document.createElement('div');
+        feedback.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #f44336;
+            color: white;
+            padding: 1rem;
+            border-radius: 4px;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        `;
+        feedback.textContent = `Error: ${error}`;
+        document.body.appendChild(feedback);
+        
+        setTimeout(() => {
+            document.body.removeChild(feedback);
+        }, 5000);
+    }
+    
+    // Mode toggle button event listener
+    if (toggleModeBtn) {
+        toggleModeBtn.addEventListener('click', async () => {
+            const currentMode = modeDisplay.textContent.includes('Multi-Timer') ? 'multi' : 'single';
+            const newMode = currentMode === 'multi' ? 'single' : 'multi';
+            
+            // Disable button during switch
+            toggleModeBtn.disabled = true;
+            toggleModeBtn.textContent = 'Switching...';
+            
+            await switchMode(newMode);
+            
+            // Re-enable button
+            toggleModeBtn.disabled = false;
+        });
+    }
+    
+    function loadSettingsForTimer(timerId) {
+        console.log(`Loading settings for timer ${timerId}`);
+        
+        // Save current settings before switching
+        if (currentSelectedTimer !== timerId) {
+            saveCurrentSettings();
+        }
+        
+        currentSelectedTimer = timerId;
+        
+        // Load timer-specific settings
+        const timerSettings = loadTimerSettings(timerId);
+        if (timerSettings) {
+            console.log(`Applying saved settings for timer ${timerId}:`, timerSettings);
+            
+            // Apply settings to form elements
+            if (timerSettings.textColor) textColor.value = timerSettings.textColor;
+            if (timerSettings.backgroundColor) backgroundColor.value = timerSettings.backgroundColor;
+            if (timerSettings.fontFamily) fontFamily.value = timerSettings.fontFamily;
+            if (timerSettings.fontSize) fontSize.value = timerSettings.fontSize;
+            if (timerSettings.endMessage) endMessage.value = timerSettings.endMessage;
+            if (timerSettings.googleFontUrl) googleFontUrl.value = timerSettings.googleFontUrl;
+            if (timerSettings.googleFontFamily) googleFontFamily.value = timerSettings.googleFontFamily;
+            
+            // Handle font variant
+            if (timerSettings.fontVariant) {
+                fontVariant.value = timerSettings.fontVariant;
+            }
+            
+            // Update detected font display if Google Font is set
+            if (timerSettings.googleFontFamily) {
+                const detectedFontContainer = document.getElementById('detected-font-container');
+                const detectedFontName = document.getElementById('detected-font-name');
+                if (detectedFontContainer && detectedFontName) {
+                    detectedFontContainer.style.display = 'block';
+                    detectedFontName.textContent = timerSettings.googleFontFamily;
+                }
+            }
+        } else {
+            console.log(`No saved settings found for timer ${timerId}, using defaults`);
+            // Reset to default values
+            textColor.value = '#000000';
+            backgroundColor.value = '#00ff00';
+            fontFamily.value = 'Arial';
+            fontSize.value = '100';
+            endMessage.value = 'TIME';
+            googleFontUrl.value = '';
+            googleFontFamily.value = '';
+            fontVariant.value = 'normal';
+        }
+    }
+    
+    function saveCurrentSettings() {
+        if (currentSelectedTimer) {
+            const settings = {
+                textColor: textColor.value,
+                backgroundColor: backgroundColor.value,
+                fontFamily: fontFamily.value,
+                fontSize: fontSize.value,
+                endMessage: endMessage.value,
+                googleFontUrl: googleFontUrl.value,
+                googleFontFamily: googleFontFamily.value,
+                fontVariant: fontVariant.value
+            };
+            saveTimerSettings(currentSelectedTimer, settings);
+        }
+    }
+    
+    // Timer selector change handler
+    if (timerSelector) {
+        timerSelector.addEventListener('change', function() {
+            const selectedTimerId = parseInt(this.value);
+            loadSettingsForTimer(selectedTimerId);
+        });
+    }
+    
+    // Timer enable/disable checkbox handlers
+    Object.keys(timerCheckboxes).forEach(timerId => {
+        const checkbox = timerCheckboxes[timerId];
+        if (checkbox) {
+            // Load saved enabled state
+            checkbox.checked = loadTimerEnabledState(parseInt(timerId));
+            
+            checkbox.addEventListener('change', function() {
+                const enabled = this.checked;
+                const timerIdNum = parseInt(timerId);
+                
+                console.log(`Timer ${timerIdNum} ${enabled ? 'enabled' : 'disabled'}`);
+                
+                // Save enabled state
+                saveTimerEnabledState(timerIdNum, enabled);
+                
+                // Send update to server via WebSocket
+                socketManager.emit('timer_enabled_changed', {
+                    timer_id: timerIdNum,
+                    enabled: enabled
+                });
+            });
+        }
+    });
+    
+    // Check current mode on page load
+    fetch('/api/mode')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                updateModeDisplay(data.mode);
+                
+                // If in multi-timer mode, load settings for timer 1 by default
+                if (data.mode === 'multi') {
+                    loadSettingsForTimer(1);
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error checking mode:', error);
+            // Default to single timer mode on error
+            updateModeDisplay('single');
+        });
+    
+    // Override the existing handleSettingsChange function to work with multi-timer
+    const originalHandleSettingsChange = handleSettingsChange;
+    handleSettingsChange = function() {
+        // Check for color conflict (text and background same color)
+        if (textColor.value.toLowerCase() === backgroundColor.value.toLowerCase()) {
+            showColorWarning();
+        } else {
+            hideColorWarning();
+        }
+        
+        const settings = {
+            textColor: textColor.value,
+            backgroundColor: backgroundColor.value,
+            fontFamily: fontFamily.value,
+            fontSize: fontSize.value,
+            endMessage: endMessage.value,
+            googleFontUrl: googleFontUrl.value,
+            googleFontFamily: googleFontFamily.value,
+            fontVariant: fontVariant.value
+        };
+        
+        // Save settings for current timer in multi-timer mode
+        if (multiTimerControls && multiTimerControls.style.display !== 'none') {
+            saveTimerSettings(currentSelectedTimer, settings);
+            
+            // Send settings with timer_id for multi-timer mode
+            socketManager.emit('timer_control', {
+                action: 'settings',
+                timer_id: currentSelectedTimer,
+                settings: settings
+            });
+        } else {
+            // Single timer mode - use original behavior
+            socketManager.emit('timer_control', {
+                action: 'settings',
+                settings: settings
+            });
+        }
+        
+        // Provide feedback that settings were applied
+        const feedbackEl = document.getElementById('settings-feedback') || (() => {
+            const el = document.createElement('div');
+            el.id = 'settings-feedback';
+            el.style.color = 'green';
+            el.style.marginTop = '1em';
+            document.querySelector('.customization').appendChild(el);
+            return el;
+        })();
+        feedbackEl.textContent = 'Settings applied!';
+        setTimeout(() => { feedbackEl.textContent = ''; }, 2000);
+    };
+    
+    // WebSocket event handlers for multi-timer support
+    socketManager.on('timer_state_changed', (data) => {
+        console.log('Timer state changed:', data);
+        
+        // Update UI based on timer state change
+        if (data.timer_id && data.state) {
+            // Update checkbox state if timer was enabled/disabled
+            const checkbox = timerCheckboxes[data.timer_id];
+            if (checkbox && data.state.enabled !== undefined) {
+                checkbox.checked = data.state.enabled;
+            }
+            
+            // If this is the currently selected timer, update the time inputs
+            if (data.timer_id === currentSelectedTimer && data.state.time_left !== undefined) {
+                const totalSeconds = data.state.time_left;
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+                
+                minutesInput.value = minutes;
+                secondsInput.value = seconds;
+            }
+        }
+    });
+    
+    socketManager.on('multi_timer_status', (data) => {
+        console.log('Multi-timer status update:', data);
+        
+        // Update all timer checkboxes based on server state
+        if (data.timers) {
+            Object.keys(data.timers).forEach(timerId => {
+                const timerData = data.timers[timerId];
+                const checkbox = timerCheckboxes[parseInt(timerId)];
+                
+                if (checkbox && timerData.enabled !== undefined) {
+                    checkbox.checked = timerData.enabled;
+                }
+            });
+        }
+    });
+    
+    socketManager.on('timer_enabled_response', (data) => {
+        console.log('Timer enabled response:', data);
+        
+        if (data.status === 'success') {
+            console.log(`Timer ${data.timer_id} ${data.enabled ? 'enabled' : 'disabled'} successfully`);
+        } else {
+            console.error('Error updating timer enabled state:', data.message);
+            
+            // Revert checkbox state on error
+            const checkbox = timerCheckboxes[data.timer_id];
+            if (checkbox) {
+                checkbox.checked = !checkbox.checked;
+            }
+        }
+    });
+    
+    // Request initial timer status when in multi-timer mode
+    socketManager.on('connect', () => {
+        console.log('Control panel connected to WebSocket');
+        
+        // Check if we're in multi-timer mode and request status
+        fetch('/api/mode')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success' && data.mode === 'multi') {
+                    // Request current timer status
+                    socketManager.emit('request_multi_timer_status', {});
+                }
+            })
+            .catch(error => {
+                console.error('Error checking mode on connect:', error);
+            });
     });
 }

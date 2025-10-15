@@ -216,7 +216,7 @@ def timer_display(timer_id):
         return jsonify({"error": f"Timer {timer_id} not found"}), 404
     
     logger.debug(f"Serving timer display for timer {timer_id}")
-    return render_template('index.html', timer_id=timer_id)
+    return render_template(f'timer_{timer_id}.html')
 
 @app.route('/api/mode', methods=['GET', 'POST'])
 def mode_api():
@@ -497,6 +497,73 @@ def handle_control_panel_get_all_timers(data=None):
     
     timers = timer_manager.get_all_timers()
     timer_data = {tid: timer.to_dict() for tid, timer in timers.items()}
+    
+    emit('all_timers_status', {
+        'mode': timer_manager.get_mode(),
+        'timers': timer_data
+    })
+
+@socketio.on('timer_enabled_changed')
+def handle_timer_enabled_changed(data):
+    """Handle timer enable/disable from control panel."""
+    logger.debug(f"Timer enabled state change: {data}")
+    
+    timer_id = data.get('timer_id')
+    enabled = data.get('enabled', True)
+    
+    if not timer_id:
+        emit('timer_enabled_response', {
+            'status': 'error',
+            'message': 'timer_id required'
+        })
+        return
+    
+    timer = timer_manager.get_timer(timer_id)
+    if not timer:
+        emit('timer_enabled_response', {
+            'status': 'error',
+            'timer_id': timer_id,
+            'message': f'Timer {timer_id} not found'
+        })
+        return
+    
+    # Update timer enabled state
+    timer.set_enabled(enabled)
+    
+    # Send success response
+    emit('timer_enabled_response', {
+        'status': 'success',
+        'timer_id': timer_id,
+        'enabled': enabled
+    })
+    
+    # Broadcast state change to all control panels
+    broadcast_to_control_panels('timer_state_changed', {
+        'timer_id': timer_id,
+        'action': 'enabled_changed',
+        'state': timer.to_dict()
+    })
+
+@socketio.on('request_multi_timer_status')
+def handle_request_multi_timer_status(data=None):
+    """Handle request for multi-timer status from control panel."""
+    logger.debug("Control panel requested multi-timer status")
+    
+    if timer_manager.get_mode() != 'multi':
+        emit('multi_timer_status', {
+            'status': 'error',
+            'message': 'Not in multi-timer mode'
+        })
+        return
+    
+    timers = timer_manager.get_all_timers()
+    timer_data = {tid: timer.to_dict() for tid, timer in timers.items()}
+    
+    emit('multi_timer_status', {
+        'status': 'success',
+        'mode': 'multi',
+        'timers': timer_data
+    })
     
     emit('all_timers_status', {
         'mode': timer_manager.get_mode(),

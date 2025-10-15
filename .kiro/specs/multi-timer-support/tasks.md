@@ -108,25 +108,25 @@
   - Ensure backward compatibility for existing users
   - _Requirements: 1.1, 1.4_
 
-- [ ] 5. Enhance control panel for multi-timer support
+- [x] 5. Enhance control panel for multi-timer support
   - Add timer selection dropdown for multi-timer mode
   - Implement enable/disable checkboxes for each timer
   - Update settings management for multiple timers
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-- [ ] 5.1 Update control panel HTML template
+- [x] 5.1 Update control panel HTML template
   - Add timer selection dropdown for multi-timer mode
   - Create enable/disable checkboxes for each timer (1-5)
   - Add mode indicator to show current operational mode
   - _Requirements: 5.1, 5.2, 5.4_
 
-- [ ] 5.2 Implement timer selection and management JavaScript
+- [x] 5.2 Implement timer selection and management JavaScript
   - Add dropdown change handlers for timer selection
   - Implement enable/disable checkbox functionality
   - Add logic to load and save settings per timer
   - _Requirements: 5.2, 5.3, 5.5_
 
-- [ ] 5.3 Update control panel WebSocket integration
+- [x] 5.3 Update control panel WebSocket integration
   - Modify WebSocket handlers to work with selected timer
   - Add timer-specific settings synchronization
   - Implement multi-timer status updates
@@ -138,19 +138,19 @@
   - Test settings persistence across timer switches
   - _Requirements: 5.2, 5.3, 5.5_
 
-- [ ] 6. Create individual timer display components
+- [x] 6. Create individual timer display components
   - Build timer-specific display templates
   - Implement timer-specific WebSocket connections
   - Add timer identification in display interfaces
   - _Requirements: 6.1, 6.2, 6.4, 6.5_
 
-- [ ] 6.1 Create timer-specific display templates
+- [x] 6.1 Create timer-specific display templates
   - Create individual timer display HTML templates
   - Add timer identification elements to displays
   - Ensure consistent styling with existing timer display
   - _Requirements: 6.2, 6.5_
 
-- [ ] 6.2 Implement timer-specific JavaScript clients
+- [x] 6.2 Implement timer-specific JavaScript clients
   - Create TimerWebSocketManager class for connection management
   - Implement timer-specific WebSocket connection logic
   - Add timer ID parameter handling in client code
@@ -168,25 +168,25 @@
   - Test timer isolation and independence
   - _Requirements: 6.2, 6.4, 6.5_
 
-- [ ] 7. Integrate and test complete multi-timer system
+- [x] 7. Integrate and test complete multi-timer system
   - Connect all components and test end-to-end functionality
   - Verify backward compatibility with single-timer mode
   - Test multi-timer independence and isolation
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 2.1, 2.2, 2.3, 2.4, 2.5_
 
-- [ ] 7.1 Integrate backend and frontend components
+- [x] 7.1 Integrate backend and frontend components
   - Connect TimerManager with Flask routes and WebSocket handlers
   - Integrate mode selection with control panel and displays
   - Ensure proper error handling across all components
   - _Requirements: 1.4, 1.5_
 
-- [ ] 7.2 Test backward compatibility
+- [x] 7.2 Test backward compatibility
   - Verify single-timer mode works exactly as before
   - Test existing API endpoints maintain compatibility
   - Ensure WebSocket behavior unchanged in single-timer mode
   - _Requirements: 1.4, 4.4, 4.5_
 
-- [ ] 7.3 Test multi-timer independence
+- [x] 7.3 Test multi-timer independence
   - Verify each timer operates independently
   - Test timer-specific settings and state isolation
   - Confirm WebSocket namespace separation
@@ -197,3 +197,21 @@
   - Test mode switching and timer management
   - Verify multi-timer scenarios with all 5 timers active
   - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 2.4, 2.5_
+
+- [x] 8. Complete timer display WebSocket integration for multi-timer mode
+  - Update timer display JavaScript to connect to timer-specific WebSocket namespaces
+  - Implement timer ID detection and namespace routing in timer displays
+  - Ensure timer displays work independently with their own WebSocket connections
+  - _Requirements: 6.4, 7.2, 7.3_
+
+- [x] 8.1 Update timer display WebSocket connection logic
+  - Modify websocket.js to detect timer ID from window.TIMER_ID
+  - Implement namespace-specific WebSocket connections for timer displays
+  - Add timer ID to all WebSocket messages from timer displays
+  - _Requirements: 6.4, 7.2_
+
+- [x] 8.2 Fix timer display settings synchronization
+  - Ensure timer displays request settings with correct timer ID
+  - Update settings persistence to be timer-specific in multi-timer mode
+  - Implement proper timer state restoration for individual timer displays
+  - _Requirements: 6.4, 6.5, 7.3_

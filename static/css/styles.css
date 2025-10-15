@@ -18,6 +18,28 @@ body {
     justify-content: center;
     align-items: center;
     background-color: #000000; /* Ensure black background */
+    position: relative;
+}
+
+/* Timer identification elements */
+.timer-identification {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+}
+
+.timer-id-badge {
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #ffffff;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    border: 2px solid #4CAF50;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 canvas {
@@ -74,6 +96,27 @@ button {
 #startBtn {
     background-color: #4CAF50;
     color: white;
+}
+
+/* Mode toggle button */
+.mode-toggle-btn {
+    background-color: #2196F3;
+    color: white;
+    padding: 0.5rem 1rem;
+    margin-left: 1rem;
+    font-size: 0.9rem;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.mode-toggle-btn:hover {
+    background-color: #1976D2;
+}
+
+.mode-indicator {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
 }
 
 #stopBtn {
@@ -164,4 +207,97 @@ button:hover {
 
 .setup-info a:hover {
     text-decoration: underline;
+}
+/* Multi-timer control styles */
+.mode-section {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background-color: #3a3a3a;
+    border-radius: 4px;
+    border: 1px solid #555;
+}
+
+.mode-indicator {
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.mode-indicator span {
+    font-size: 1.1rem;
+    color: #ffffff;
+}
+
+#current-mode {
+    color: #4CAF50;
+    text-transform: uppercase;
+}
+
+#multi-timer-controls {
+    margin-top: 1rem;
+}
+
+.timer-selection {
+    margin-bottom: 1.5rem;
+}
+
+.timer-selection label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+#timer-selector {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    background-color: #ffffff;
+}
+
+.timer-enable-controls h3 {
+    margin-bottom: 1rem;
+    color: #ffffff;
+    border-bottom: 1px solid #555;
+    padding-bottom: 0.5rem;
+}
+
+.timer-checkboxes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.75rem;
+}
+
+.timer-checkboxes label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #ffffff;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.timer-checkboxes label:hover {
+    background-color: #4a4a4a;
+}
+
+.timer-checkboxes input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 600px) {
+    .timer-checkboxes {
+        grid-template-columns: 1fr;
+    }
+    
+    .control-panel {
+        margin: 1rem;
+        padding: 1rem;
+    }
 }

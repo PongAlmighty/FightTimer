@@ -44,6 +44,11 @@ class TimerState:
         self.settings.update(settings)
         logger.debug(f"Timer {self.timer_id} settings updated: {settings}")
     
+    def set_enabled(self, enabled: bool) -> None:
+        """Set timer enabled state."""
+        self.enabled = enabled
+        logger.debug(f"Timer {self.timer_id} {'enabled' if enabled else 'disabled'}")
+    
     def to_dict(self) -> Dict[str, Any]:
         """Convert timer state to dictionary."""
         return asdict(self)
