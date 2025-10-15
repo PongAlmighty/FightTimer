@@ -1,1 +1,17 @@
+# FightTimer API Quick Reference
+
+## Single Timer Mode
 curl http://your-server:8765/api/timer
+
+## Multi-Timer Mode (Timer 1-5)
+curl http://your-server:8765/api/timer/1
+curl http://your-server:8765/api/timer/2
+curl http://your-server:8765/api/timer/3
+curl http://your-server:8765/api/timer/4
+curl http://your-server:8765/api/timer/5
+
+## Mode Management
+curl http://your-server:8765/api/mode
+
+## All Timers Status
+curl http://your-server:8765/api/timers/status
