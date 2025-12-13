@@ -15,6 +15,23 @@ A professional-grade browser-based countdown timer for live streaming and produc
 
 ---
 
+## Hardware Integration
+
+FightTimer seamlessly integrates with the **[Arena Timer Firmware Standalone](https://github.com/EVAC-AZ/Arena-Timer-Firmware-Standalone)** project, enabling you to display the countdown timer on dedicated hardware displays. This integration allows you to create professional arena-style countdown displays for live events.
+
+### Key Benefits
+- **Real-time Synchronization**: Hardware displays stay perfectly in sync with the FightTimer server via WebSocket connections
+- **Customizable Display**: Control timer appearance, colors, and messages from FightTimer's web interface
+- **Professional Presentation**: Purpose-built hardware timers provide clear visibility for audiences and competitors
+- **Easy Setup**: The firmware connects directly to FightTimer's WebSocket API without additional configuration
+
+### How It Works
+The Arena Timer Firmware connects to FightTimer using the WebSocket API documented in this README. When you start, stop, or reset the timer through FightTimer's control panel or REST API, the hardware display automatically updates in real-time. All appearance settings (colors, fonts, end messages) are also synchronized to ensure a consistent look across all displays.
+
+For detailed setup instructions and hardware compatibility information, visit the [Arena Timer Firmware Standalone repository](https://github.com/EVAC-AZ/Arena-Timer-Firmware-Standalone).
+
+---
+
 ## Setup
 
 ### 1. Clone the Repository
