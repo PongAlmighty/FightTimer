@@ -18,6 +18,21 @@
                 <button id="toggle-mode-btn" class="mode-toggle-btn">Switch to Multi-Timer</button>
             </div>
             
+            <!-- Single-timer endpoint info (shown by default) -->
+            <div id="single-timer-info" class="endpoint-info" style="margin-top: 1em; padding: 1em; background-color: #f5f5f5; border-radius: 5px;">
+                <h3>Connection Endpoints</h3>
+                <div>
+                    <p><strong>Timer Display URL:</strong></p>
+                    <p style="font-family: monospace; font-size: 0.9em; margin-left: 1em;">
+                        <a href="http://{{ server_ip }}:{{ server_port }}/timer" target="_blank">http://{{ server_ip }}:{{ server_port }}/timer</a>
+                    </p>
+                    <p style="margin-top: 1em;"><strong>WebSocket Namespace:</strong></p>
+                    <p style="font-family: monospace; font-size: 0.9em; margin-left: 1em;">/ (default)</p>
+                    <p style="margin-top: 1em;"><strong>API Endpoint:</strong></p>
+                    <p style="font-family: monospace; font-size: 0.9em; margin-left: 1em;">http://{{ server_ip }}:{{ server_port }}/api/timer</p>
+                </div>
+            </div>
+            
             <!-- Multi-timer controls (hidden by default) -->
             <div id="multi-timer-controls" style="display: none;">
                 <div class="timer-selection">
@@ -29,6 +44,37 @@
                         <option value="4">Timer 4</option>
                         <option value="5">Timer 5</option>
                     </select>
+                </div>
+                
+                <!-- Endpoint Information -->
+                <div class="endpoint-info" style="margin-top: 1em; padding: 1em; background-color: #f5f5f5; border-radius: 5px;">
+                    <h3>Connection Endpoints</h3>
+                    <div id="endpoint-display">
+                        <p><strong>Timer Display URLs:</strong></p>
+                        <ul style="list-style: none; padding-left: 0; font-family: monospace; font-size: 0.9em;">
+                            <li>Timer 1: <a href="http://{{ server_ip }}:{{ server_port }}/timer/1" target="_blank">http://{{ server_ip }}:{{ server_port }}/timer/1</a></li>
+                            <li>Timer 2: <a href="http://{{ server_ip }}:{{ server_port }}/timer/2" target="_blank">http://{{ server_ip }}:{{ server_port }}/timer/2</a></li>
+                            <li>Timer 3: <a href="http://{{ server_ip }}:{{ server_port }}/timer/3" target="_blank">http://{{ server_ip }}:{{ server_port }}/timer/3</a></li>
+                            <li>Timer 4: <a href="http://{{ server_ip }}:{{ server_port }}/timer/4" target="_blank">http://{{ server_ip }}:{{ server_port }}/timer/4</a></li>
+                            <li>Timer 5: <a href="http://{{ server_ip }}:{{ server_port }}/timer/5" target="_blank">http://{{ server_ip }}:{{ server_port }}/timer/5</a></li>
+                        </ul>
+                        <p style="margin-top: 1em;"><strong>WebSocket Namespaces:</strong></p>
+                        <ul style="list-style: none; padding-left: 0; font-family: monospace; font-size: 0.9em;">
+                            <li>/timer1</li>
+                            <li>/timer2</li>
+                            <li>/timer3</li>
+                            <li>/timer4</li>
+                            <li>/timer5</li>
+                        </ul>
+                        <p style="margin-top: 1em;"><strong>API Endpoints:</strong></p>
+                        <ul style="list-style: none; padding-left: 0; font-family: monospace; font-size: 0.9em;">
+                            <li>Timer 1: http://{{ server_ip }}:{{ server_port }}/api/timer/1</li>
+                            <li>Timer 2: http://{{ server_ip }}:{{ server_port }}/api/timer/2</li>
+                            <li>Timer 3: http://{{ server_ip }}:{{ server_port }}/api/timer/3</li>
+                            <li>Timer 4: http://{{ server_ip }}:{{ server_port }}/api/timer/4</li>
+                            <li>Timer 5: http://{{ server_ip }}:{{ server_port }}/api/timer/5</li>
+                        </ul>
+                    </div>
                 </div>
                 
                 <div class="timer-enable-controls">

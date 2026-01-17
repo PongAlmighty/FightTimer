@@ -19,7 +19,7 @@ class TimerWebSocketManager {
             // Determine the appropriate namespace based on timer ID
             if (this.timerId && this.timerId >= 1 && this.timerId <= 5) {
                 // Multi-timer mode: connect to timer-specific namespace
-                const namespace = `/timer/${this.timerId}`;
+                const namespace = `/timer${this.timerId}`;
                 console.log(`Connecting to timer-specific namespace: ${namespace}`);
                 this.socket = io(namespace);
             } else {
@@ -1205,6 +1205,12 @@ if (document.querySelector('.control-panel')) {
         
         if (multiTimerControls) {
             multiTimerControls.style.display = mode === 'multi' ? 'block' : 'none';
+        }
+        
+        // Toggle endpoint info sections
+        const singleTimerInfo = document.getElementById('single-timer-info');
+        if (singleTimerInfo) {
+            singleTimerInfo.style.display = mode === 'single' ? 'block' : 'none';
         }
         
         if (toggleModeBtn) {

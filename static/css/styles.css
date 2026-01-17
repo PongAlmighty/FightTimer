@@ -301,3 +301,53 @@ button:hover {
         padding: 1rem;
     }
 }
+
+/* Endpoint info styling */
+.endpoint-info {
+    margin-top: 1em;
+    padding: 1em;
+    background-color: #f5f5f5;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+.endpoint-info h3 {
+    margin-top: 0;
+    margin-bottom: 0.75em;
+    color: #333;
+    font-size: 1.1em;
+    border-bottom: 2px solid #4CAF50;
+    padding-bottom: 0.5em;
+}
+
+.endpoint-info p {
+    margin: 0.5em 0;
+    color: #333;
+}
+
+.endpoint-info strong {
+    color: #2196F3;
+}
+
+.endpoint-info ul {
+    list-style: none;
+    padding-left: 0;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
+.endpoint-info ul li {
+    padding: 0.4em 0;
+    color: #555;
+}
+
+.endpoint-info a {
+    color: #4CAF50;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.endpoint-info a:hover {
+    color: #45a049;
+    text-decoration: underline;
+}

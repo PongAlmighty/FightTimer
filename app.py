@@ -28,8 +28,8 @@ def broadcast_timer_update(data, timer_id=None):
     """
     if timer_manager.get_mode() == 'multi' and timer_id:
         # Multi-timer mode: broadcast to specific timer namespace
-        socketio.emit('timer_update', data, namespace=f'/timer/{timer_id}')
-        logger.debug(f"Broadcasted to namespace /timer/{timer_id}: {data}")
+        socketio.emit('timer_update', data, namespace=f'/timer{timer_id}')
+        logger.debug(f"Broadcasted to namespace /timer{timer_id}: {data}")
     else:
         # Single-timer mode: broadcast to default namespace
         socketio.emit('timer_update', data)
@@ -58,7 +58,7 @@ class TimerNamespace(Namespace):
         emit('connection_response', {
             'status': 'connected',
             'timer_id': self.timer_id,
-            'namespace': f'/timer/{self.timer_id}'
+            'namespace': f'/timer{self.timer_id}'
         })
     
     def on_disconnect(self):
@@ -152,7 +152,7 @@ class TimerNamespace(Namespace):
 # Register timer namespaces for multi-timer mode (timers 1-5)
 timer_namespaces = {}
 for timer_id in range(1, 6):
-    namespace_path = f'/timer/{timer_id}'
+    namespace_path = f'/timer{timer_id}'
     timer_namespace = TimerNamespace(namespace_path, timer_id)
     timer_namespaces[timer_id] = timer_namespace
     socketio.on_namespace(timer_namespace)
@@ -199,7 +199,22 @@ def font_status():
 def control():
     """Render the control panel page."""
     logger.debug("Serving control panel")
-    return render_template('control.html')
+    
+    # Get server host and port information
+    import socket
+    hostname = socket.gethostname()
+    try:
+        # Get local IP address
+        local_ip = socket.gethostbyname(hostname)
+    except:
+        local_ip = '127.0.0.1'
+    
+    port = os.environ.get('PORT', 8765)
+    
+    return render_template('control.html', 
+                         server_ip=local_ip, 
+                         server_port=port,
+                         hostname=hostname)
 
 @app.route('/timer/<int:timer_id>')
 def timer_display(timer_id):
@@ -619,7 +634,7 @@ def handle_control_panel_broadcast_to_timer(data):
     
     # Broadcast to specific timer namespace
     if timer_manager.get_mode() == 'multi':
-        socketio.emit('control_panel_message', message_data, namespace=f'/timer/{timer_id}')
+        socketio.emit('control_panel_message', message_data, namespace=f'/timer{timer_id}')
     else:
         # In single-timer mode, broadcast to default namespace
         socketio.emit('control_panel_message', message_data)
