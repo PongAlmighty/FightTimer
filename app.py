@@ -30,6 +30,11 @@ def broadcast_timer_update(data, timer_id=None):
         # Multi-timer mode: broadcast to specific timer namespace
         socketio.emit('timer_update', data, namespace=f'/timer{timer_id}')
         logger.debug(f"Broadcasted to namespace /timer{timer_id}: {data}")
+        
+        # Mirror Timer 1 to default namespace for hardware/legacy compatibility
+        if timer_id == 1:
+            socketio.emit('timer_update', data)
+            logger.debug(f"Mirrored Timer 1 update to default namespace")
     else:
         # Single-timer mode: broadcast to default namespace
         socketio.emit('timer_update', data)
@@ -60,6 +65,28 @@ class TimerNamespace(Namespace):
             'timer_id': self.timer_id,
             'namespace': f'/timer{self.timer_id}'
         })
+        
+        # Initial synchronization for newly joined client
+        timer = timer_manager.get_timer(self.timer_id)
+        if timer and timer.is_running:
+            time_left = timer.get_current_time_left()
+            minutes = time_left // 60
+            seconds = time_left % 60
+            
+            logger.debug(f"Sending initial sync to new client on timer {self.timer_id}: {minutes}:{seconds}")
+            
+            # Send sync sequence: Reset to exact time, then Start
+            emit('timer_update', {
+                'action': 'reset',
+                'minutes': minutes,
+                'seconds': seconds,
+                'timer_id': self.timer_id,
+                'is_initial_sync': True
+            })
+            emit('timer_update', {
+                'action': 'start',
+                'timer_id': self.timer_id
+            })
     
     def on_disconnect(self):
         logger.debug(f"Client disconnected from timer {self.timer_id} namespace")
@@ -206,10 +233,20 @@ def control():
     try:
         # Get local IP address
         local_ip = socket.gethostbyname(hostname)
-    except:
-        local_ip = '127.0.0.1'
+    except Exception as e:
+        logger.warning(f"Could not get local IP: {e}")
+        # In Docker, try to get the container's IP
+        try:
+            import subprocess
+            result = subprocess.run(['hostname', '-i'], capture_output=True, text=True, timeout=1)
+            if result.returncode == 0:
+                local_ip = result.stdout.strip().split()[0]
+            else:
+                local_ip = '0.0.0.0'
+        except:
+            local_ip = '0.0.0.0'
     
-    port = os.environ.get('PORT', 8765)
+    port = int(os.environ.get('PORT', 8765))
     
     return render_template('control.html', 
                          server_ip=local_ip, 
@@ -440,6 +477,28 @@ def handle_connect():
         'mode': timer_manager.get_mode(),
         'namespace': 'default'
     })
+    
+    # Initial synchronization for newly joined client (single mode)
+    if timer_manager.get_mode() == 'single':
+        timer = timer_manager.get_timer(1)
+        if timer and timer.is_running:
+            time_left = timer.get_current_time_left()
+            minutes = time_left // 60
+            seconds = time_left % 60
+            
+            logger.debug(f"Sending initial sync to new single-mode client: {minutes}:{seconds}")
+            
+            emit('timer_update', {
+                'action': 'reset',
+                'minutes': minutes,
+                'seconds': seconds,
+                'timer_id': 1,
+                'is_initial_sync': True
+            })
+            emit('timer_update', {
+                'action': 'start',
+                'timer_id': 1
+            })
 
 @socketio.on('request_current_settings')
 def handle_settings_request(data=None):
@@ -649,3 +708,42 @@ def handle_control_panel_broadcast_to_timer(data):
 def handle_disconnect():
     """Handle client disconnection from default namespace."""
     logger.debug("Client disconnected from default namespace")
+
+def master_heartbeat_sync():
+    """Background task to broadcast server's master clock to all clients to prevent drift."""
+    while True:
+        socketio.sleep(5) # Sync more frequently (every 5 seconds)
+        try:
+            timers = timer_manager.get_all_timers()
+            for tid, timer in timers.items():
+                if timer.is_running:
+                    time_left = timer.get_current_time_left()
+                    # Only sync if there is time remaining
+                    if time_left > 0:
+                        minutes = time_left // 60
+                        seconds = time_left % 60
+                        
+                        data_reset = {
+                            'action': 'reset',
+                            'minutes': minutes,
+                            'seconds': seconds,
+                            'timer_id': tid,
+                            'is_heartbeat': True
+                        }
+                        
+                        data_start = {
+                            'action': 'start',
+                            'timer_id': tid,
+                            'is_heartbeat': True
+                        }
+                        
+                        # Use the helper to ensure reliable broadcasting
+                        broadcast_timer_update(data_reset, tid)
+                        broadcast_timer_update(data_start, tid)
+            
+            logger.debug("Master clock heartbeat completed")
+        except Exception as e:
+            logger.error(f"Error in master heartbeat: {e}")
+
+# Start the synchronization heartbeat task
+socketio.start_background_task(master_heartbeat_sync)
