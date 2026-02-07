@@ -12,7 +12,7 @@ COPY . .
 # Create directory for downloaded fonts if it doesn't exist
 RUN mkdir -p static/fonts/google
 
-# Expose the port the app runs on
+# Expose the port the app runs on (default 8765)
 EXPOSE 8765
 
 # Command to run the application
