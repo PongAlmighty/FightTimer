@@ -246,7 +246,7 @@ def control():
         except:
             local_ip = '0.0.0.0'
     
-    port = int(os.environ.get('PORT', 8765))
+    port = int(os.environ.get('PORT', 55011))
     
     return render_template('control.html', 
                          server_ip=local_ip, 

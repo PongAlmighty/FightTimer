@@ -40,7 +40,7 @@ docker-compose up --build
 docker build -t fighttimer .
 
 # Run container
-docker run -p 8765:8765 fighttimer
+docker run -p 55011:55011 fighttimer
 ```
 
 ### Testing
@@ -49,7 +49,7 @@ docker run -p 8765:8765 fighttimer
 python -m pytest
 
 # Check API endpoint
-curl http://localhost:8765/api/timer
+curl http://localhost:55011/api/timer
 ```
 
 ## Build System
@@ -59,7 +59,7 @@ curl http://localhost:8765/api/timer
 - Font assets downloaded and cached at runtime
 
 ## Deployment
-- Default port: 8765
+- Default port: 55011
 - Environment variables: `FLASK_SECRET_KEY`, `PORT`
 - Volume mount for font persistence: `./static/fonts/google`
 - Supports macOS launchd service configuration

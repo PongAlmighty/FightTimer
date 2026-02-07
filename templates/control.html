@@ -35,9 +35,9 @@
             
             <!-- Multi-timer controls (hidden by default) -->
             <div id="multi-timer-controls" style="display: none;">
-                <div class="timer-selection">
-                    <label for="timer-selector">Select Timer:</label>
-                    <select id="timer-selector">
+                <div class="timer-selection" style="margin-bottom: 1.5em; padding: 1.25em; background-color: #f0f0f0; border: 1px solid #ddd; border-radius: 8px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);">
+                    <label for="timer-selector" style="font-weight: bold; color: #333; display: block; margin-bottom: 0.8em;">Currently Controlling:</label>
+                    <select id="timer-selector" style="width: 100%; padding: 0.8em; font-size: 1.1em; border-radius: 6px; border: 1px solid #ccc; cursor: pointer; appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right%201em%20top%2050%25; background-size: .65em%20auto;">
                         <option value="1">Timer 1</option>
                         <option value="2">Timer 2</option>
                         <option value="3">Timer 3</option>
@@ -46,10 +46,10 @@
                     </select>
                 </div>
                 
-                <!-- Endpoint Information -->
-                <div class="endpoint-info" style="margin-top: 1em; padding: 1em; background-color: #f5f5f5; border-radius: 5px;">
-                    <h3>Connection Endpoints</h3>
-                    <div id="endpoint-display">
+                <!-- Expanded Endpoint Information for all timers -->
+                <details class="endpoint-info" style="margin-top: 1em; padding: 1em; background-color: #f5f5f5; border-radius: 5px;">
+                    <summary style="cursor: pointer; font-weight: bold; color: #444;">Show Connection Endpoints (All Timers)</summary>
+                    <div id="endpoint-display" style="margin-top: 1em;">
                         <p><strong>Timer Display URLs:</strong></p>
                         <ul style="list-style: none; padding-left: 0; font-family: monospace; font-size: 0.9em;">
                             <li>Timer 1: <a href="http://{{ server_ip }}:{{ server_port }}/timer/1" target="_blank">http://{{ server_ip }}:{{ server_port }}/timer/1</a></li>
@@ -58,35 +58,8 @@
                             <li>Timer 4: <a href="http://{{ server_ip }}:{{ server_port }}/timer/4" target="_blank">http://{{ server_ip }}:{{ server_port }}/timer/4</a></li>
                             <li>Timer 5: <a href="http://{{ server_ip }}:{{ server_port }}/timer/5" target="_blank">http://{{ server_ip }}:{{ server_port }}/timer/5</a></li>
                         </ul>
-                        <p style="margin-top: 1em;"><strong>WebSocket Namespaces:</strong></p>
-                        <ul style="list-style: none; padding-left: 0; font-family: monospace; font-size: 0.9em;">
-                            <li>/timer1</li>
-                            <li>/timer2</li>
-                            <li>/timer3</li>
-                            <li>/timer4</li>
-                            <li>/timer5</li>
-                        </ul>
-                        <p style="margin-top: 1em;"><strong>API Endpoints:</strong></p>
-                        <ul style="list-style: none; padding-left: 0; font-family: monospace; font-size: 0.9em;">
-                            <li>Timer 1: http://{{ server_ip }}:{{ server_port }}/api/timer/1</li>
-                            <li>Timer 2: http://{{ server_ip }}:{{ server_port }}/api/timer/2</li>
-                            <li>Timer 3: http://{{ server_ip }}:{{ server_port }}/api/timer/3</li>
-                            <li>Timer 4: http://{{ server_ip }}:{{ server_port }}/api/timer/4</li>
-                            <li>Timer 5: http://{{ server_ip }}:{{ server_port }}/api/timer/5</li>
-                        </ul>
                     </div>
-                </div>
-                
-                <div class="timer-enable-controls">
-                    <h3>Timer Status</h3>
-                    <div class="timer-checkboxes">
-                        <label><input type="checkbox" id="timer-1-enabled" value="1"> Timer 1</label>
-                        <label><input type="checkbox" id="timer-2-enabled" value="2"> Timer 2</label>
-                        <label><input type="checkbox" id="timer-3-enabled" value="3"> Timer 3</label>
-                        <label><input type="checkbox" id="timer-4-enabled" value="4"> Timer 4</label>
-                        <label><input type="checkbox" id="timer-5-enabled" value="5"> Timer 5</label>
-                    </div>
-                </div>
+                </details>
             </div>
         </div>
 

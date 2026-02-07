@@ -35,8 +35,8 @@ pip install flask flask-socketio eventlet
 ```sh
 python main.py
 ```
-- The server will start on port 8765 by default. Access the timer at: [http://localhost:8765/](http://localhost:8765/)
-- Control panel: [http://localhost:8765/control](http://localhost:8765/control)
+- The server will start on port 55011 by default. Access the timer at: [http://localhost:55011/](http://localhost:55011/)
+- Control panel: [http://localhost:55011/control](http://localhost:55011/control)
 
 ---
 
@@ -85,7 +85,7 @@ launchctl start com.fighttimer.app
 
 The FightTimer application exposes a REST API endpoint for remote control. This is primarily designed for integrations like Bitfocus Companion.
 
-**Base URL:** `http://<your-server-address>:8765` (Default: `http://localhost:8765`)
+**Base URL:** `http://<your-server-address>:55011` (Default: `http://localhost:55011`)
 
 ### Endpoint: `/api/timer`
 
@@ -104,7 +104,7 @@ This is the main endpoint for interacting with the timer.
     ```
 -   **Example (`curl`):**
     ```bash
-    curl http://localhost:8765/api/timer
+    curl http://localhost:55011/api/timer
     ```
 
 #### Method: `POST`
@@ -129,24 +129,24 @@ This is the main endpoint for interacting with the timer.
         -   **Example (`curl`):**
             ```bash
             # Start/resume with default/previous time
-            curl -X POST -H "Content-Type: application/json" -d '{"action": "start"}' http://localhost:8765/api/timer
+            curl -X POST -H "Content-Type: application/json" -d '{"action": "start"}' http://localhost:55011/api/timer
 
             # Start a new timer for 2 minutes and 30 seconds
-            curl -X POST -H "Content-Type: application/json" -d '{"action": "start", "minutes": 2, "seconds": 30}' http://localhost:8765/api/timer
+            curl -X POST -H "Content-Type: application/json" -d '{"action": "start", "minutes": 2, "seconds": 30}' http://localhost:55011/api/timer
             ```
 
     -   **`"action": "stop"`**
         -   **Description:** Pauses the currently running timer.
         -   **Example (`curl`):**
             ```bash
-            curl -X POST -H "Content-Type: application/json" -d '{"action": "stop"}' http://localhost:8765/api/timer
+            curl -X POST -H "Content-Type: application/json" -d '{"action": "stop"}' http://localhost:55011/api/timer
             ```
 
     -   **`"action": "reset"`**
         -   **Description:** Stops the timer and resets it to the initial time values (typically the last values used for a `start` action, or defaults to 3 minutes if no specific time has been set).
         -   **Example (`curl`):**
             ```bash
-            curl -X POST -H "Content-Type: application/json" -d '{"action": "reset"}' http://localhost:8765/api/timer
+            curl -X POST -H "Content-Type: application/json" -d '{"action": "reset"}' http://localhost:55011/api/timer
             ```
 
     -   **`"action": "settings"`**
@@ -165,12 +165,12 @@ This is the main endpoint for interacting with the timer.
             # Update text color to red and font size to 120px
             curl -X POST -H "Content-Type: application/json" \
                  -d '{"action": "settings", "settings": {"textColor": "#FF0000", "fontSize": 120}}' \
-                 http://localhost:8765/api/timer
+                 http://localhost:55011/api/timer
 
             # Change the end message and set a Google Font
             curl -X POST -H "Content-Type: application/json" \
                  -d '{"action": "settings", "settings": {"endMessage": "Round Over", "googleFontUrl": "https://fonts.googleapis.com/css2?family=Lato&display=swap"}}' \
-                 http://localhost:8765/api/timer
+                 http://localhost:55011/api/timer
             ```
 -   **Success Response (for all POST actions):**
     ```json
@@ -192,9 +192,9 @@ This is the main endpoint for interacting with the timer.
 
 For applications requiring real-time synchronization with the timer (like a custom hardware display), FightTimer provides a WebSocket interface powered by Flask-SocketIO.
 
-**WebSocket URL:** `ws://<your-server-address>:8765/socket.io/` (Default: `ws://localhost:8765/socket.io/`)
+**WebSocket URL:** `ws://<your-server-address>:55011/socket.io/` (Default: `ws://localhost:55011/socket.io/`)
 
-(Note: The exact URL might vary slightly depending on the Socket.IO client library used. Most libraries handle the `/socket.io/` path automatically when given the base URL like `ws://localhost:8765`.)
+(Note: The exact URL might vary slightly depending on the Socket.IO client library used. Most libraries handle the `/socket.io/` path automatically when given the base URL like `ws://localhost:55011`.)
 
 ### Connecting
 
@@ -279,13 +279,13 @@ FightTimer can be easily controlled using Bitfocus Companion, allowing you to tr
 
 Companion communicates with FightTimer using its REST API. You'll typically use the "Generic HTTP Request" action in Companion (often found as "HTTP POST" or similar, depending on the Companion module version).
 
-**Target URL:** `http://<IP_ADDRESS_OF_FIGHTTIMER_SERVER>:8765/api/timer`
-(Replace `<IP_ADDRESS_OF_FIGHTTIMER_SERVER>` with the actual IP address or hostname where FightTimer is running. If Companion is on the same machine, you can use `http://localhost:8765/api/timer`.)
+**Target URL:** `http://<IP_ADDRESS_OF_FIGHTTIMER_SERVER>:55011/api/timer`
+(Replace `<IP_ADDRESS_OF_FIGHTTIMER_SERVER>` with the actual IP address or hostname where FightTimer is running. If Companion is on the same machine, you can use `http://localhost:55011/api/timer`.)
 
 **Content-Type:** `application/json` (This should be set for all POST requests in Companion, usually in the request headers option.)
 
 ### API Usage Notes for Companion:
--   The API is primarily for *sending commands*. To see the current timer status (time remaining, colors, etc.), you should have the FightTimer display page (`http://<IP_ADDRESS_OF_FIGHTTIMER_SERVER>:8765/`) open on a screen visible to the operator, or use the control panel (`http://<IP_ADDRESS_OF_FIGHTTIMER_SERVER>:8765/control`).
+-   The API is primarily for *sending commands*. To see the current timer status (time remaining, colors, etc.), you should have the FightTimer display page (`http://<IP_ADDRESS_OF_FIGHTTIMER_SERVER>:55011/`) open on a screen visible to the operator, or use the control panel (`http://<IP_ADDRESS_OF_FIGHTTIMER_SERVER>:55011/control`).
 -   For a full list of API actions and parameters, please refer to the [API Documentation](#api-documentation) section above.
 
 ### Common Companion Button Examples:
@@ -293,42 +293,42 @@ Companion communicates with FightTimer using its REST API. You'll typically use 
 1.  **Start 3-Minute Timer:**
     -   **Action Type:** Generic HTTP Request
     -   **Method:** POST
-    -   **URL:** `http://localhost:8765/api/timer`
+    -   **URL:** `http://localhost:55011/api/timer`
     -   **Headers:** `Content-Type: application/json`
     -   **JSON Body:** `{"action": "start", "minutes": 3, "seconds": 0}`
 
 2.  **Start 30-Second Warning Timer:**
     -   **Action Type:** Generic HTTP Request
     -   **Method:** POST
-    -   **URL:** `http://localhost:8765/api/timer`
+    -   **URL:** `http://localhost:55011/api/timer`
     -   **Headers:** `Content-Type: application/json`
     -   **JSON Body:** `{"action": "start", "minutes": 0, "seconds": 30}`
 
 3.  **Pause/Stop Timer:**
     -   **Action Type:** Generic HTTP Request
     -   **Method:** POST
-    -   **URL:** `http://localhost:8765/api/timer`
+    -   **URL:** `http://localhost:55011/api/timer`
     -   **Headers:** `Content-Type: application/json`
     -   **JSON Body:** `{"action": "stop"}`
 
 4.  **Reset Timer:**
     -   **Action Type:** Generic HTTP Request
     -   **Method:** POST
-    -   **URL:** `http://localhost:8765/api/timer`
+    -   **URL:** `http://localhost:55011/api/timer`
     -   **Headers:** `Content-Type: application/json`
     -   **JSON Body:** `{"action": "reset"}`
 
 5.  **Change Colors (e.g., to Red Text on Black Background):**
     -   **Action Type:** Generic HTTP Request
     -   **Method:** POST
-    -   **URL:** `http://localhost:8765/api/timer`
+    -   **URL:** `http://localhost:55011/api/timer`
     -   **Headers:** `Content-Type: application/json`
     -   **JSON Body:** `{"action": "settings", "settings": {"textColor": "#FF0000", "backgroundColor": "#000000"}}`
 
 6.  **Change End Message:**
     -   **Action Type:** Generic HTTP Request
     -   **Method:** POST
-    -   **URL:** `http://localhost:8765/api/timer`
+    -   **URL:** `http://localhost:55011/api/timer`
     -   **Headers:** `Content-Type: application/json`
     -   **JSON Body:** `{"action": "settings", "settings": {"endMessage": "NEXT ROUND"}}`
 
@@ -345,7 +345,7 @@ Remember to adjust the IP address in the URL if FightTimer is running on a diffe
 FightTimer supports adding and using Google Fonts with automatic variant detection:
 
 1. **Adding a Google Font**:
-   - Go to the control panel at [http://localhost:8765/control](http://localhost:8765/control)
+   - Go to the control panel at [http://localhost:55011/control](http://localhost:55011/control)
    - In the Customization section, find the "Google Font URL" input field
    - Paste a Google Fonts URL (e.g., `https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap`)
    - Click "Add Font"

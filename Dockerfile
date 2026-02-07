@@ -12,8 +12,8 @@ COPY . .
 # Create directory for downloaded fonts if it doesn't exist
 RUN mkdir -p static/fonts/google
 
-# Expose the port the app runs on (default 8765)
-EXPOSE 8765
+# Expose the port the app runs on (default 55011)
+EXPOSE 55011
 
 # Command to run the application
 CMD ["python", "main.py"]

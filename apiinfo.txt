@@ -1,1 +1,1 @@
-curl http://your-server:8765/api/timer
+curl http://your-server:55011/api/timer

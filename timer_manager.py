@@ -18,26 +18,49 @@ class TimerState:
     """Represents the state and operations for a single timer."""
     
     timer_id: int
-    time_left: int = 180  # Default 3 minutes in seconds
+    baseline_time_left: int = 180  # Time remaining when timer was last stopped/reset
+    start_timestamp: Optional[float] = None # Wall-clock time when timer was started
     is_running: bool = False
     settings: Dict[str, Any] = field(default_factory=dict)
     enabled: bool = True
     
+    def get_current_time_left(self) -> int:
+        """Calculate the current time left based on the wall clock."""
+        if not self.is_running or self.start_timestamp is None:
+            return self.baseline_time_left
+        
+        import time
+        elapsed = time.time() - self.start_timestamp
+        current_left = int(self.baseline_time_left - elapsed)
+        
+        # If timer has naturally expired
+        if current_left <= 0:
+            return 0
+            
+        return current_left
+    
     def start(self) -> None:
         """Start the timer."""
-        self.is_running = True
-        logger.debug(f"Timer {self.timer_id} started")
+        import time
+        if not self.is_running:
+            self.start_timestamp = time.time()
+            self.is_running = True
+            logger.debug(f"Timer {self.timer_id} started at {self.start_timestamp}")
     
     def stop(self) -> None:
         """Stop the timer."""
-        self.is_running = False
-        logger.debug(f"Timer {self.timer_id} stopped")
+        if self.is_running:
+            self.baseline_time_left = self.get_current_time_left()
+            self.start_timestamp = None
+            self.is_running = False
+            logger.debug(f"Timer {self.timer_id} stopped. New baseline: {self.baseline_time_left}")
     
     def reset(self, minutes: int = 3, seconds: int = 0) -> None:
         """Reset the timer to specified time."""
-        self.time_left = (minutes * 60) + seconds
+        self.baseline_time_left = (minutes * 60) + seconds
+        self.start_timestamp = None
         self.is_running = False
-        logger.debug(f"Timer {self.timer_id} reset to {self.time_left} seconds")
+        logger.debug(f"Timer {self.timer_id} reset to {self.baseline_time_left} seconds")
     
     def update_settings(self, settings: Dict[str, Any]) -> None:
         """Update timer settings."""
@@ -50,8 +73,10 @@ class TimerState:
         logger.debug(f"Timer {self.timer_id} {'enabled' if enabled else 'disabled'}")
     
     def to_dict(self) -> Dict[str, Any]:
-        """Convert timer state to dictionary."""
-        return asdict(self)
+        """Convert timer state to dictionary, injecting calculated time_left."""
+        data = asdict(self)
+        data['time_left'] = self.get_current_time_left()
+        return data
 
 
 class TimerManager:

@@ -76,7 +76,7 @@ or
 ### Mode Selection Page
 - **URL**: `http://<server-ip>:<port>/` or `http://<server-ip>:<port>/mode-selection`
 - **Purpose**: Choose between Single Timer and Multi-Timer modes
-- **Default Port**: 8765
+- **Default Port**: 55011
 
 ### Control Panel (Admin Interface)
 - **URL**: `http://<server-ip>:<port>/control`
@@ -116,7 +116,7 @@ or
 ```
 http://<server-ip>:<port>
 ```
-Default port: **8765**
+Default port: **55011**
 
 ### 1. Timer Status (GET)
 
@@ -512,7 +512,7 @@ Begins countdown from current time_left value.
 
 **REST API**:
 ```bash
-curl -X POST http://localhost:8765/api/timer/1 \
+curl -X POST http://localhost:55011/api/timer/1 \
   -H "Content-Type: application/json" \
   -d '{"action": "start"}'
 ```
@@ -527,7 +527,7 @@ Pauses countdown at current time_left value.
 
 **REST API**:
 ```bash
-curl -X POST http://localhost:8765/api/timer/1 \
+curl -X POST http://localhost:55011/api/timer/1 \
   -H "Content-Type: application/json" \
   -d '{"action": "stop"}'
 ```
@@ -542,7 +542,7 @@ Sets timer to specified time and stops it.
 
 **REST API**:
 ```bash
-curl -X POST http://localhost:8765/api/timer/1 \
+curl -X POST http://localhost:55011/api/timer/1 \
   -H "Content-Type: application/json" \
   -d '{"action": "reset", "minutes": 10, "seconds": 30}'
 ```
@@ -578,7 +578,7 @@ socket.emit('timer_control', {
 
 **REST API**:
 ```bash
-curl -X POST http://localhost:8765/api/timer/1 \
+curl -X POST http://localhost:55011/api/timer/1 \
   -H "Content-Type: application/json" \
   -d '{
     "action": "settings",
@@ -612,7 +612,7 @@ socket.emit('timer_control', {
 1. **Get Google Font URL** from [Google Fonts](https://fonts.google.com/)
 2. **Download font locally** (optional but recommended):
    ```bash
-   curl -X POST http://localhost:8765/fonts/download \
+   curl -X POST http://localhost:55011/fonts/download \
      -H "Content-Type: application/json" \
      -d '{"url": "https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"}'
    ```
@@ -638,14 +638,14 @@ socket.emit('timer_control', {
 #### Single Timer Mode
 ```javascript
 // Start timer
-fetch('http://192.168.1.100:8765/api/timer', {
+fetch('http://192.168.1.100:55011/api/timer', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ action: 'start' })
 });
 
 // Reset to 5 minutes
-fetch('http://192.168.1.100:8765/api/timer', {
+fetch('http://192.168.1.100:55011/api/timer', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ 
@@ -659,14 +659,14 @@ fetch('http://192.168.1.100:8765/api/timer', {
 #### Multi-Timer Mode
 ```javascript
 // Start timer 3
-fetch('http://192.168.1.100:8765/api/timer/3', {
+fetch('http://192.168.1.100:55011/api/timer/3', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ action: 'start' })
 });
 
 // Stop timer 1
-fetch('http://192.168.1.100:8765/api/timer/1', {
+fetch('http://192.168.1.100:55011/api/timer/1', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ action: 'stop' })
@@ -679,10 +679,10 @@ fetch('http://192.168.1.100:8765/api/timer/1', {
 const io = require('socket.io-client');
 
 // Single timer mode
-const socket = io('http://localhost:8765');
+const socket = io('http://localhost:55011');
 
 // Multi-timer mode (timer 2)
-const socket2 = io('http://localhost:8765/timer2');
+const socket2 = io('http://localhost:55011/timer2');
 
 socket.on('connect', () => {
   console.log('Connected to timer');
@@ -702,7 +702,7 @@ socket.on('connect', () => {
 ```python
 import requests
 
-BASE_URL = 'http://localhost:8765'
+BASE_URL = 'http://localhost:55011'
 
 # Single timer mode
 def start_timer():
@@ -739,8 +739,8 @@ print(get_all_timers())
 
 1. **Add Browser Source** in OBS
 2. **Set URL**:
-   - Single Timer: `http://localhost:8765/timer`
-   - Multi-Timer: `http://localhost:8765/timer/1` (or 2, 3, 4, 5)
+   - Single Timer: `http://localhost:55011/timer`
+   - Multi-Timer: `http://localhost:55011/timer/1` (or 2, 3, 4, 5)
 3. **Set Width/Height**: 1920x1080 (or your canvas size)
 4. **Check**: "Shutdown source when not visible" (optional)
 5. **Check**: "Refresh browser when scene becomes active" (optional)
@@ -750,21 +750,21 @@ print(get_all_timers())
 **Button 1 - Start Timer**:
 - Action: HTTP Request
 - Method: POST
-- URL: `http://192.168.1.100:8765/api/timer/1`
+- URL: `http://192.168.1.100:55011/api/timer/1`
 - Body: `{"action": "start"}`
 - Headers: `Content-Type: application/json`
 
 **Button 2 - Stop Timer**:
 - Action: HTTP Request
 - Method: POST
-- URL: `http://192.168.1.100:8765/api/timer/1`
+- URL: `http://192.168.1.100:55011/api/timer/1`
 - Body: `{"action": "stop"}`
 - Headers: `Content-Type: application/json`
 
 **Button 3 - Reset to 3 Minutes**:
 - Action: HTTP Request
 - Method: POST
-- URL: `http://192.168.1.100:8765/api/timer/1`
+- URL: `http://192.168.1.100:55011/api/timer/1`
 - Body: `{"action": "reset", "minutes": 3, "seconds": 0}`
 - Headers: `Content-Type: application/json`
 
@@ -842,4 +842,4 @@ For issues or questions:
 - Check the [README.md](README.md) for setup instructions
 - Review the [steering documentation](.kiro/steering/) for project guidelines
 - Ensure WebSocket connections are not blocked by firewalls
-- Verify the server is running on the expected port (default: 8765)
+- Verify the server is running on the expected port (default: 55011)

@@ -274,7 +274,7 @@ class TimerConfig:
 The multi-timer implementation is fully compatible with the existing Docker container setup:
 
 ### Container Architecture
-- **Port Exposure**: Single port (8765) handles all timer endpoints and WebSocket namespaces
+- **Port Exposure**: Single port (55011) handles all timer endpoints and WebSocket namespaces
 - **Volume Mounting**: Existing font volume mount (`./static/fonts/google:/app/static/fonts/google`) supports all timers
 - **Environment Variables**: Current environment variables (FLASK_SECRET_KEY, PORT) remain sufficient
 

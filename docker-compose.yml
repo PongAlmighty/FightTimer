@@ -4,10 +4,10 @@ services:
   fighttimer:
     build: .
     ports:
-      - "8765:8765"
+      - "55011:55011"
     volumes:
       - ./static/fonts/google:/app/static/fonts/google
     environment:
       - FLASK_SECRET_KEY=your-secret-key-here
-      - PORT=8765
+      - PORT=55011
     restart: unless-stopped
