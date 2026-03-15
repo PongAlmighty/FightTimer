@@ -169,10 +169,56 @@ class TimerNamespace(Namespace):
         else:
             emit('error', {'message': f'Timer {self.timer_id} not found'})
     
+    def on_timer_state(self, data):
+        """Receive periodic state broadcast from hardware timer and sync web displays."""
+        timer = timer_manager.get_timer(self.timer_id)
+        if not timer:
+            return
+
+        time_remaining = data.get('timeRemaining')
+        is_running = data.get('isRunning', False)
+        is_paused = data.get('isPaused', True)
+
+        if time_remaining is None:
+            return
+
+        minutes = time_remaining // 60
+        seconds = time_remaining % 60
+
+        # Sync server-side timer so the heartbeat task stays accurate
+        timer.reset(minutes, seconds)
+        if is_running and not is_paused:
+            timer.start()
+
+        # Push correction to web display clients only (broadcast=True skips hardware sender)
+        # Use is_heartbeat so the client applies drift-check logic before correcting
+        emit('timer_update', {
+            'action': 'reset',
+            'minutes': minutes,
+            'seconds': seconds,
+            'timer_id': self.timer_id,
+            'is_heartbeat': True
+        }, broadcast=True)
+
+        if is_running and not is_paused:
+            emit('timer_update', {
+                'action': 'start',
+                'timer_id': self.timer_id,
+                'is_heartbeat': True
+            }, broadcast=True)
+        elif is_paused:
+            emit('timer_update', {
+                'action': 'stop',
+                'timer_id': self.timer_id,
+                'is_heartbeat': True
+            }, broadcast=True)
+
+        logger.debug(f"Hardware sync timer {self.timer_id}: {time_remaining}s remaining, running={is_running}, paused={is_paused}")
+
     def on_control_panel_message(self, data):
         """Handle messages from control panel to this timer."""
         logger.debug(f"Timer {self.timer_id} received control panel message: {data}")
-        
+
         # Forward the message to all clients connected to this timer namespace
         emit('control_panel_update', data, broadcast=True)
 
@@ -227,31 +273,8 @@ def control():
     """Render the control panel page."""
     logger.debug("Serving control panel")
     
-    # Get server host and port information
-    import socket
-    hostname = socket.gethostname()
-    try:
-        # Get local IP address
-        local_ip = socket.gethostbyname(hostname)
-    except Exception as e:
-        logger.warning(f"Could not get local IP: {e}")
-        # In Docker, try to get the container's IP
-        try:
-            import subprocess
-            result = subprocess.run(['hostname', '-i'], capture_output=True, text=True, timeout=1)
-            if result.returncode == 0:
-                local_ip = result.stdout.strip().split()[0]
-            else:
-                local_ip = '0.0.0.0'
-        except:
-            local_ip = '0.0.0.0'
-    
     port = int(os.environ.get('PORT', 55011))
-    
-    return render_template('control.html', 
-                         server_ip=local_ip, 
-                         server_port=port,
-                         hostname=hostname)
+    return render_template('control.html', server_port=port)
 
 @app.route('/timer/<int:timer_id>')
 def timer_display(timer_id):
