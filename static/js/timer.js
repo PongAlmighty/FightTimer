@@ -25,7 +25,9 @@ class Timer {
     start() {
         console.log("Timer start called, current isRunning:", this.isRunning);
         this.isRunning = true;
-        this.tick(); // Calling tick() here will clear any existing timeout due to the check inside tick()
+        this._startTime = Date.now();
+        this._startTimeLeft = this.timeLeft;
+        this.tick();
     }
 
     stop() {
@@ -38,26 +40,29 @@ class Timer {
 
     reset(minutes = 3, seconds = 0) {
         console.log(`Timer reset called: ${minutes}:${seconds}`);
-        // Update time even if running
         this.timeLeft = (minutes * 60) + seconds;
+        this._startTime = null;
+        this._startTimeLeft = this.timeLeft;
         this.draw();
     }
 
     tick() {
         if (!this.isRunning) return;
 
-        // Prevent multiple simultaneous loops
         if (this.tickTimeout) {
             clearTimeout(this.tickTimeout);
         }
 
+        // Calculate time left from wall clock to avoid drift from throttled setTimeout
+        const elapsed = this._startTime ? Math.floor((Date.now() - this._startTime) / 1000) : 0;
+        this.timeLeft = Math.max(0, this._startTimeLeft - elapsed);
+
+        this.draw();
+
         if (this.timeLeft > 0) {
-            this.timeLeft--;
-            this.draw();
-            this.tickTimeout = setTimeout(() => this.tick(), 1000);
+            this.tickTimeout = setTimeout(() => this.tick(), 200);
         } else {
             this.isRunning = false;
-            this.draw();
         }
     }
 
