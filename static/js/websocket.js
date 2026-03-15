@@ -302,6 +302,7 @@ if (document.getElementById('timerCanvas')) {
                     if (diff > 0) {
                         console.log(`[Sync] Correcting drift of ${diff}s`);
                         timer.reset(data.minutes, data.seconds);
+                        timer.isRunning = false; // reset() nulls _startTime but leaves isRunning true, which freezes the tick — clear it so the subsequent start heartbeat restarts the countdown
                     }
                 } else {
                     timer.reset(data.minutes, data.seconds);

@@ -108,6 +108,18 @@ Sent:
 
 ---
 
+## Known bug to fix in the fork
+
+**Hardware immediately shows 2:59 on start instead of 3:00.**
+
+The web timer correctly shows 3:00 for the first full second (0 seconds elapsed = display full time). The hardware treats the current second as already consumed and immediately decrements, making the display 1 second behind the web throughout the entire countdown.
+
+Fix: In `Timer::getRemainingTime()` (or wherever the display value is calculated), ensure the first second is not consumed until 1 full second has elapsed — same wall-clock approach the web timer uses.
+
+This is the authoritative behavior: show the set duration on start, decrement only after a full second has elapsed.
+
+---
+
 ## No other changes needed
 
 - All existing REST endpoints unchanged

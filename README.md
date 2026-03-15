@@ -98,6 +98,26 @@ launchctl start com.fighttimer.app
 
 ---
 
+## Running with Docker
+
+The recommended way to run FightTimer in production is via Docker Compose. All configuration (port, volume, env vars) is stored in `docker-compose.yml` and persists across image updates.
+
+### First run
+
+```sh
+docker compose up -d
+```
+
+### Updating to a new version
+
+```sh
+docker compose pull && docker compose up -d
+```
+
+This pulls the latest `themightypong/fighttimer-web:latest` image and restarts the container with your existing configuration intact. Downloaded fonts are preserved via the volume mount in `docker-compose.yml`.
+
+---
+
 ## API Documentation
 
 The FightTimer application exposes a REST API endpoint for remote control. This is primarily designed for integrations like Bitfocus Companion.

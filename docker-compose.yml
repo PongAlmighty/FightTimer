@@ -2,7 +2,7 @@ version: '3'
 
 services:
   fighttimer:
-    build: .
+    image: themightypong/fighttimer-web:latest
     ports:
       - "55011:55011"
     volumes:
