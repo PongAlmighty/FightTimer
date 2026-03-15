@@ -523,6 +523,52 @@ def handle_connect():
                 'timer_id': 1
             })
 
+@socketio.on('timer_state')
+def handle_timer_state(data):
+    """Receive periodic state broadcast from hardware timer on default namespace (single-timer mode)."""
+    timer = timer_manager.get_timer(1)
+    if not timer:
+        return
+
+    time_remaining = data.get('timeRemaining')
+    is_running = data.get('isRunning', False)
+    is_paused = data.get('isPaused', False)
+
+    if time_remaining is None:
+        return
+
+    minutes = time_remaining // 60
+    seconds = time_remaining % 60
+
+    # Sync server-side timer so the heartbeat task stays accurate
+    timer.reset(minutes, seconds)
+    if is_running and not is_paused:
+        timer.start()
+
+    # Push correction to web display clients (broadcast=True skips hardware sender)
+    emit('timer_update', {
+        'action': 'reset',
+        'minutes': minutes,
+        'seconds': seconds,
+        'timer_id': 1,
+        'is_heartbeat': True
+    }, broadcast=True)
+
+    if is_running and not is_paused:
+        emit('timer_update', {
+            'action': 'start',
+            'timer_id': 1,
+            'is_heartbeat': True
+        }, broadcast=True)
+    elif is_paused:
+        emit('timer_update', {
+            'action': 'stop',
+            'timer_id': 1,
+            'is_heartbeat': True
+        }, broadcast=True)
+
+    logger.debug(f"Hardware sync (default ns): {time_remaining}s remaining, running={is_running}, paused={is_paused}")
+
 @socketio.on('request_current_settings')
 def handle_settings_request(data=None):
     """Handle request for current settings (single-timer mode and control panel)."""
