@@ -9,7 +9,7 @@ cd "$(dirname "$0")"
 echo "$(date): Checking for updates to FightTimer container..."
 
 # Pull the latest image
-docker pull yourusername/fighttimer:latest
+docker pull themightypong/fighttimer-web:latest
 
 # Check if pull was successful
 if [ $? -eq 0 ]; then
