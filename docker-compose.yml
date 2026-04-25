@@ -1,13 +1,15 @@
-version: '3'
-
 services:
   fighttimer:
     image: themightypong/fighttimer-web:latest
+    container_name: fighttimer
     ports:
-      - "55011:55011"
+      - "${HOST_PORT:-55011}:55011"
     volumes:
-      - ./static/fonts/google:/app/static/fonts/google
+      - fighttimer_fonts:/app/static/fonts/google
     environment:
-      - FLASK_SECRET_KEY=your-secret-key-here
+      - FLASK_SECRET_KEY=${FLASK_SECRET_KEY:?Set FLASK_SECRET_KEY in .env}
       - PORT=55011
     restart: unless-stopped
+
+volumes:
+  fighttimer_fonts:

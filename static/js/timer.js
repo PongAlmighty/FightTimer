@@ -85,6 +85,10 @@ class Timer {
         // Update settings
         Object.assign(this.settings, settings);
 
+        if (settings.endMessage !== undefined) {
+            this.endMessage = settings.endMessage;
+        }
+
         // Prefer googleFontFamily if set
         if (settings.googleFontFamily) {
             this.settings.fontFamily = settings.googleFontFamily;

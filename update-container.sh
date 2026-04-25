@@ -16,8 +16,8 @@ if [ $? -eq 0 ]; then
   echo "$(date): New image pulled successfully, restarting container..."
   
   # Restart the container with the new image
-  docker-compose down
-  docker-compose up -d
+  docker compose down
+  docker compose up -d
   
   echo "$(date): Container updated and restarted."
 else
