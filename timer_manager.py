@@ -30,8 +30,10 @@ class TimerState:
             return self.baseline_time_left
         
         import time
-        elapsed = time.time() - self.start_timestamp
-        current_left = int(self.baseline_time_left - elapsed)
+        # Count down only after a full second has elapsed (3:00 stays on screen for the
+        # first second), matching the web display and hardware timer rounding
+        elapsed = int(time.time() - self.start_timestamp)
+        current_left = self.baseline_time_left - elapsed
         
         # If timer has naturally expired
         if current_left <= 0:
