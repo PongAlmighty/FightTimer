@@ -40,6 +40,10 @@ def broadcast_timer_update(data, timer_id=None):
         socketio.emit('timer_update', data)
         logger.debug(f"Broadcasted to default namespace: {data}")
 
+        # Mirror to /timer1 so /timer/1 displays keep working in single mode
+        socketio.emit('timer_update', data, namespace='/timer1')
+        logger.debug(f"Mirrored single-mode update to namespace /timer1")
+
 def broadcast_to_control_panels(event, data):
     """
     Helper function to broadcast events to all control panel connections.
