@@ -818,5 +818,7 @@ def master_heartbeat_sync():
         except Exception as e:
             logger.error(f"Error in master heartbeat: {e}")
 
-# Start the synchronization heartbeat task
-socketio.start_background_task(master_heartbeat_sync)
+# Heartbeat disabled: the hardware timer stops on every heartbeat 'reset' (it only
+# ignores heartbeat 'start'), so it froze between heartbeats. Re-enable once the
+# heartbeat uses an action the firmware ignores, e.g. a dedicated 'sync'.
+# socketio.start_background_task(master_heartbeat_sync)
